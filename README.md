@@ -2,23 +2,15 @@
 
 [![Mayhem for Code](https://drive.google.com/uc?export=view&id=1JXEbfCDMMwwnDaOgs5-XlPWQwZR93fv4)](http://mayhem.forallsecure.com/)
 
-A GitHub Action for using Mayhem for API to check for reliability,
-performance and security issues in your APIs. 
+A GitHub Action for using Mayhem for API to check for reliability, performance and security issues in your APIs. 
 
 ## About Mayhem for Code
 
-🧪 Modern App Testing: Mayhem for Code is a dynamic testing tool that
-catches reliability, performance and security bugs before they hit
-production.
+🧪 Modern App Testing: Mayhem for Code is a dynamic testing tool that catches reliability, performance and security bugs before they hit production.
 
-🧑‍💻 For Developers, by developers: The engineers building
-software are the best equipped to fix bugs, including security bugs. As
-engineers ourselves, we're building tools that we wish existed to make
-our job easier! 
+🧑‍💻 For Developers, by developers: The engineers building software are the best equipped to fix bugs, including security bugs. As engineers ourselves, we're building tools that we wish existed to make our job easier!
 
-🤖 Simple to Automate in CI: Tests belong in CI, running on every commit
-and PRs. We make it easy, and provide results right in your PRs where
-you want them. Adding Mayhem for API to a DevOps pipeline is easy.
+🤖 Simple to Automate in CI: Tests belong in CI, running on every commit and PRs. We make it easy, and provide results right in your PRs where you want them. Adding Mayhem for API to a DevOps pipeline is easy.
 
 Want to try it? [Sign up for free](http://mayhem.forallsecure.com/) today!
 
@@ -57,7 +49,6 @@ The action accepts the follow inputs:
 |   | `html-report` | string | Path to the generated SARIF report | 
 |   | `sarif-report` | string | Path to the generated HTML report | 
 
-
 ### Getting your Mayhem for Code token
 
 The Actions example above refer to a Mayhem for Code token:
@@ -67,22 +58,17 @@ with:
   mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
 ```
 
-You can create a [service account
-token](https://mayhem4api.forallsecure.com/docs/ch01-03-organizations.html#service-accounts)
-using the Mayhem for API CLI:
+You can create a [service account token](https://mayhem4api.forallsecure.com/docs/ch01-03-organizations.html#service-accounts) using the Mayhem for API CLI:
 
-```
+```sh
 mapi organization service-account create <your-org> <service-account-name>
 ```
 
-This will output a token that you can then add as a secret to your
-GitHub repository or organization.
+This will output a token that you can then add as a secret to your GitHub repository or organization.
 
 ### Continuing on error
 
-The above examples will fail the workflow when issues are found. If you
-want to ensure the Action continues, even if Mayhem for Code found
-issues, then continue-on-error can be used.
+The above examples will fail the workflow when issues are found. If you want to ensure the Action continues, even if Mayhem for Code found issues, then continue-on-error can be used.
 
 ```yaml
 name: Example workflow for Mayhem for Code
@@ -106,10 +92,7 @@ jobs:
 
 # Reports
 
-Mayhem for Code generate reports when you pass `sarif-report` or
-`html-report` to the input. Make sure to pass `continue-on-error` to the
-Mayhem for Code step if you want to process the reports in follow-up
-steps.
+Mayhem for Code generate reports when you pass `sarif-report` or `html-report` to the input. Make sure to pass `continue-on-error` to the Mayhem for Code step if you want to process the reports in follow-up steps.
 
 ## Artifact HTML Report
 
@@ -136,14 +119,9 @@ To artifact the report in your build, add this step to your pipeline:
 
 ## GitHub Code Scanning support
 
-![Mayhem for API issue in your
-PR](http://mayhem4api.forallsecure.com/downloads/img/sarif-github.png)
+![Mayhem for API issue in your PR](http://mayhem4api.forallsecure.com/downloads/img/sarif-github.png)
 
-Uploading SARIF reports to GitHub allows you to see any issue found by
-Mayhem for API right on your PR, as well as in the "Security" tab of
-your repository. This currently requires you to have a GitHub Enterprise
-Plan or have a public repository. To upload the SARIF report, add this
-step to your pipeline:
+Uploading SARIF reports to GitHub allows you to see any issue found by Mayhem for API right on your PR, as well as in the "Security" tab of your repository. This currently requires you to have a GitHub Enterprise Plan or have a public repository. To upload the SARIF report, add this step to your pipeline:
 
 ```yaml
 - name: Run Mayhem for Code to check for vulnerabilities
@@ -160,4 +138,3 @@ step to your pipeline:
   with:
     sarif_file: mcode.sarif
 ```
-
