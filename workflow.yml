@@ -1,0 +1,58 @@
+# This workflow starts your API and fuzzes it with ForAllSecure Mayhem for API
+# to find reliability, performance and security issues before they reach
+# production.
+#
+# To use this workflow, you will need to:
+#
+# 1. Create a Mayhem for Code account at
+#    https://mayhem.forallsecure.com/ (free trial)
+#
+# 2. Create an API authentication token
+#
+# 3. Add the API authentication token as a a secret in GitHub called "MAYHEM_TOKEN"
+#
+# 4. Update the "Build your target" step to build your target
+#
+# If you have any questions, please contact us at support@forallsecure.com
+
+name: "Mayhem for Code"
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  mayhem-for-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Build your target so that mayhem is ready to run them
+      - name: Build your target
+        run: ./build_your_target.sh & # <- update this
+
+      # Run Mayhem for Code
+      - name: Mayhem for Code
+        uses: ForAllSecure/mcode-action@v1
+        continue-on-error: true
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
+          sarif-report: mcode.sarif
+          html: mcode.html
+
+      # Archive HTML report
+      - name: Archive Mayhem for Code report
+        uses: actions/upload-artifact@v2
+        with:
+          name: mcode-report
+          path: mcode.html
+
+      # Upload SARIF file (only available on public repos or github
+      # enterprise). If you cannot use this action, other report format are
+      # available (HTML, JUnit)
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: mcode.sarif
