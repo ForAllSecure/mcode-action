@@ -12,7 +12,7 @@ A GitHub Action for using Mayhem for API to check for reliability, performance a
 
 🤖 Simple to Automate in CI: Tests belong in CI, running on every commit and PRs. We make it easy, and provide results right in your PRs where you want them. Adding Mayhem for API to a DevOps pipeline is easy.
 
-Want to try it? [Sign up for free](http://mayhem.forallsecure.com/) today!
+Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) today!
 
 ## Usage
 
