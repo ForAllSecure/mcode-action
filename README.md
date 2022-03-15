@@ -19,10 +19,15 @@ Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) tod
 To use the Mayhem for Code GitHub Action, you'll need the following pre-requisites:
 
 1. Create a Mayhem account and copy and paste your account token to GitHub Secrets.
+
     1. Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account.
+
     2. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
+
     3. Copy and paste your Mayhem token to your GitHub Secrets.
+
         > **Note:** See the official GitHub documentation for setting up your [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization).
+      
 2. Create a `mayhem.yml` file located at  in your GitHub repository.
 
     ```sh
