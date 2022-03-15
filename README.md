@@ -111,7 +111,7 @@ The mCode Action accepts the following inputs:
 
 Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~:text=The%20Static%20Analysis%20Results%20Interchange,approved%20as%20an%20OASIS%20standard.) for your application security testing results.
 
-SARIF report output files are generated using the `sarif-output` parameter, which specifies an output file path. Similarly, to upload the SARIF report to GitHub, use the `sarif_file` parameter to specify the location of an input SARIF file to upload to GitHub.
+SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path. Similarly, to upload the SARIF report to GitHub, use the `sarif_file` parameter to specify the location of an input SARIF file to upload to GitHub.
 
 ```sh
 - name: Start analysis
