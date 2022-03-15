@@ -34,7 +34,7 @@ To use the Mayhem for Code GitHub Action, you'll need the following pre-requisit
     .github/workflows/mayhem.yml
     ```
 
-Need some help? Take a look at some working mCode Action examples at [https://github.com/forallsecure/mcode-action-examples](https://github.com/forallsecure/mcode-action-examples).
+🤔 Still need some help? Take a look at our working mCode Action examples at: [https://github.com/forallsecure/mcode-action-examples](https://github.com/forallsecure/mcode-action-examples).
 
 ## Usage
 
@@ -105,10 +105,10 @@ The mCode GitHUb Action accepts the following inputs:
 
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
-| ✔️ | `mayhem-token` | string | Mayhem for Code account token | 
-|   | `args` | string | Additional arguments such as specifying the corpus directory path | 
+| ✔️ | `mayhem-token` | string | Mayhem for Code account token |
+|   | `args` | string | Additional arguments such as specifying the corpus directory path |
 |   | `sarif-output` | string | Path to the SARIF report output file | 
-|   | `sarif_file` | string | Path to the SARIF report input file to be uploaded to GitHub | 
+|   | `sarif_file` | string | Path to the SARIF report input file to be uploaded to GitHub |
 
 # Reports and GitHub Code Scanning
 
