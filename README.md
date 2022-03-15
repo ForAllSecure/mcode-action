@@ -26,13 +26,15 @@ To use the Mayhem for Code GitHub Action, you'll need the following pre-requisit
 
     c. Copy and paste your Mayhem token to your GitHub Secrets.
 
-        > **Note:** See the official GitHub documentation for setting up your [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization).
+      > **Note:** See the official GitHub documentation for setting up your [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization).
 
 2. Create a `mayhem.yml` file in your GitHub repository located at:
 
     ```sh
     .github/workflows/mayhem.yml
     ```
+
+Need some help? Take a look at some working mCode Action examples at [https://github.com/forallsecure/mcode-action-examples](https://github.com/forallsecure/mcode-action-examples).
 
 ## Usage
 
@@ -99,9 +101,7 @@ jobs:
           sarif_file: sarif
 ```
 
-This repo contains a [full example](workflow.yml) for reference.
-
-The action accepts the follow inputs:
+The mCode GitHUb Action accepts the following inputs:
 
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
@@ -109,23 +109,6 @@ The action accepts the follow inputs:
 |   | `args` | string | Additional arguments such as specifying the corpus directory path | 
 |   | `sarif-output` | string | Path to the SARIF report output file | 
 |   | `sarif_file` | string | Path to the SARIF report input file to be uploaded to GitHub | 
-
-### Getting your Mayhem for Code token
-
-The Actions example above refers to a Mayhem for Code token:
-
-```yaml
-with:
-  mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-```
-
-In order to obtain your Mayhem token, perform the following steps:
-
-1. Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account.
-2. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
-3. Copy and paste your Mayhem token to your GitHub Secrets.
-
-
 
 # Reports and GitHub Code Scanning
 
