@@ -16,7 +16,13 @@ Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) tod
 
 ## Usage
 
-Use the mCode GitHub Action as follows:
+Create a file in your GitHub repository at:
+
+```sh
+.github/workflows/mayhem.yml
+```
+
+Your `mayhem.yml` file should look like the following:
 
 ```yaml
 name: Mayhem
