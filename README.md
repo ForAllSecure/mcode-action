@@ -2,7 +2,7 @@
 
 [![Mayhem for Code](https://drive.google.com/uc?export=view&id=1JXEbfCDMMwwnDaOgs5-XlPWQwZR93fv4)](http://mayhem.forallsecure.com/)
 
-A GitHub Action for using Mayhem for API to check for reliability, performance and security issues in your APIs. 
+A GitHub Action for using Mayhem for Code to check for reliability, performance and security issues in your target binary (packaged as a containerized Docker image).
 
 ## About Mayhem for Code
 
@@ -10,31 +10,73 @@ A GitHub Action for using Mayhem for API to check for reliability, performance a
 
 🧑‍💻 For Developers, by developers: The engineers building software are the best equipped to fix bugs, including security bugs. As engineers ourselves, we're building tools that we wish existed to make our job easier!
 
-🤖 Simple to Automate in CI: Tests belong in CI, running on every commit and PRs. We make it easy, and provide results right in your PRs where you want them. Adding Mayhem for API to a DevOps pipeline is easy.
+🤖 Simple to Automate in CI: Tests belong in CI, running on every commit and PRs. We make it easy, and provide results right in your PRs where you want them. Adding Mayhem for Code to a DevOps pipeline is easy.
 
 Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) today!
 
 ## Usage
 
-Use the Action as follows:
+Use the mCode GitHub Action as follows:
 
 ```yaml
-name: Example workflow for Mayhem for Code
-on: push
+name: Mayhem
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  security:
-    runs-on: ubuntu-latest
+  build:
+    name: '${{ matrix.os }} shared=${{ matrix.shared }} ${{ matrix.build_type }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        shared: [false]
+        build_type: [Release]
+        include:
+          - os: ubuntu-latest
+            triplet: x64-linux
+
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Build your target
-      run: ./build_your_target.sh & # <- update this
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Run Mayhem for Code to check for vulnerabilities
-      uses: ForAllSecure/mcode-action@v1
-      with:
-        mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-        mayhem-url: ${{ secrets.MAYHEM_URL }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Start analysis
+        uses: ethan42/mcode-action@44343bdb4c774508c5b032f1cb24c805ccb5167e
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
+          sarif-output: sarif
+
+
+      - name: Upload SARIF file(s)
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: sarif
 ```
 
 This repo contains a [full example](workflow.yml) for reference.
@@ -43,11 +85,10 @@ The action accepts the follow inputs:
 
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
-| ✔️ | `mayhem-token` | string | Mayhem for API service account token | 
-| ✔️ | `mayhem-url` | string | URL to your running API. *Example:* http://localhost:8000/api/v1 | 
-|   | `duration` | number | Duration of scan, in seconds | 60 
-|   | `html-report` | string | Path to the generated SARIF report | 
-|   | `sarif-report` | string | Path to the generated HTML report | 
+| ✔️ | `mayhem-token` | string | Mayhem for Code account token | 
+|   | `args` | string | Additional arguments such as specifying the corpus directory path | 
+|   | `sarif-output` | string | Path to the SARIF report output file | 
+|   | `sarif_file` | string | Path to the SARIF report input file to be uploaded to GitHub | 
 
 ### Getting your Mayhem for Code token
 
@@ -58,83 +99,8 @@ with:
   mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
 ```
 
-You can create a [service account token](https://mayhem4api.forallsecure.com/docs/ch01-03-organizations.html#service-accounts) using the Mayhem for API CLI:
+Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account. Then, click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token. Finally, copy and paste your Mayhem token to your GitHub Secrets.
 
-```sh
-mapi organization service-account create <your-org> <service-account-name>
-```
+# Reports and GitHub Code Scanning
 
-This will output a token that you can then add as a secret to your GitHub repository or organization.
-
-### Continuing on error
-
-The above examples will fail the workflow when issues are found. If you want to ensure the Action continues, even if Mayhem for Code found issues, then continue-on-error can be used.
-
-```yaml
-name: Example workflow for Mayhem for Code
-on: push
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Start your API
-      run: ./build_your_target.sh & # <- update this
-
-    - name: Run Mayhem for Code to check for vulnerabilities
-      uses: ForAllSecure/mcode-action@v1
-      continue-on-error: true
-      with:
-        mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-        mayhem-url: ${{ secrets.MAYHEM_URL }}
-```
-
-# Reports
-
-Mayhem for Code generate reports when you pass `sarif-report` or `html-report` to the input. Make sure to pass `continue-on-error` to the Mayhem for Code step if you want to process the reports in follow-up steps.
-
-## Artifact HTML Report
-
-![HTML Report](https://mayhem4api.forallsecure.com/downloads/img/sample-report.png)
-
-To artifact the report in your build, add this step to your pipeline:
-
-```yaml
-- name: Run Mayhem for Code to check for vulnerabilities
-  uses: ForAllSecure/mcode-action@v1
-  continue-on-error: true
-  with:
-    mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-    mayhem-url: ${{ secrets.MAYHEM_URL }}
-    html-report: mcode.html
-
-# Archive HTML report
-- name: Archive Mayhem for Code report
-  uses: actions/upload-artifact@v2
-  with:
-    name: mcode-report
-    path: mcode.html
-```
-
-## GitHub Code Scanning support
-
-![Mayhem for API issue in your PR](http://mayhem4api.forallsecure.com/downloads/img/sarif-github.png)
-
-Uploading SARIF reports to GitHub allows you to see any issue found by Mayhem for API right on your PR, as well as in the "Security" tab of your repository. This currently requires you to have a GitHub Enterprise Plan or have a public repository. To upload the SARIF report, add this step to your pipeline:
-
-```yaml
-- name: Run Mayhem for Code to check for vulnerabilities
-  uses: ForAllSecure/mcode-action@v1
-  continue-on-error: true
-  with:
-    mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-    mayhem-url: ${{ secrets.MAYHEM_URL }}
-    sarif-report: mcode.sarif
-
-# Upload SARIF file (only available on public repos or github enterprise)
-- name: Upload SARIF file
-  uses: github/codeql-action/upload-sarif@v1
-  with:
-    sarif_file: mcode.sarif
-```
+Mayhem for Code generates SARIF reports for your code's security testing results, with the output file generated at the file path according to the `sarif-output` parameter. To upload the SARIF report to GitHub, use the `sarif_file` parameter, respectively, allowing you to view these results in the `Security` tab of your repository as well as your for your individual pull requests.
