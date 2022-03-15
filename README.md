@@ -2,11 +2,11 @@
 
 [![Mayhem for Code](https://drive.google.com/uc?export=view&id=1JXEbfCDMMwwnDaOgs5-XlPWQwZR93fv4)](http://mayhem.forallsecure.com/)
 
-A GitHub Action for using Mayhem for Code to check for reliability, performance and security issues in your target binary (packaged as a containerized Docker image).
+A GitHub Action for using Mayhem for Code to check for reliability, performance and security issues in your application binary (packaged as a containerized [Docker](https://docs.docker.com/get-started/overview/) image).
 
 ## About Mayhem for Code
 
-🧪 Modern App Testing: Mayhem for Code is a dynamic testing tool that catches reliability, performance and security bugs before they hit production.
+🧪 Modern App Testing: Mayhem for Code is a application security testing tool that catches reliability, performance and security bugs before they hit production.
 
 🧑‍💻 For Developers, by developers: The engineers building software are the best equipped to fix bugs, including security bugs. As engineers ourselves, we're building tools that we wish existed to make our job easier!
 
@@ -16,7 +16,7 @@ Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) tod
 
 ## Getting Started
 
-To use the Mayhem for Code GitHub Action, you'll need the following pre-requisites:
+To use the Mayhem for Code GitHub Action, perform the following steps:
 
 1. Create a Mayhem account and copy and paste your account token to GitHub Secrets.
 
@@ -92,7 +92,6 @@ jobs:
           args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
           sarif-output: sarif
 
-
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v1
         with:
@@ -108,8 +107,33 @@ The mCode GitHUb Action accepts the following inputs:
 |   | `sarif-output` | string | Path to the SARIF report output file | 
 |   | `sarif_file` | string | Path to the SARIF report input file to be uploaded to GitHub |
 
-# Reports and GitHub Code Scanning
+## Reports and GitHub Code Scanning
 
-Mayhem for Code generates SARIF reports for your code's security testing results, with the output file generated at the file path according to the `sarif-output` parameter. To upload the SARIF report to GitHub, use the `sarif_file` parameter, respectively, allowing you to view these results in the `Security` tab of your repository as well as your for your individual pull requests.
+Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~:text=The%20Static%20Analysis%20Results%20Interchange,approved%20as%20an%20OASIS%20standard.) for your application security testing results.
+
+SARIF report output files are genereated using the `sarif-output` parameter. To upload the SARIF report to GitHub, use the `sarif_file` parameter, respectively. 
+
+```sh
+- name: Start analysis
+  uses: ethan42/mcode-action@44343bdb4c774508c5b032f1cb24c805ccb5167e
+  with:
+    mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+    args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
+    sarif-output: sarif
+
+- name: Upload SARIF file(s)
+  uses: github/codeql-action/upload-sarif@v1
+  with:
+    sarif_file: sarif
+```
+
+Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as your for your individual pull requests.
 
 ![code-scanning-alert](code-scanning-alert.png)
+
+## About Us
+
+ForAllSecure was founded with the mission to make the world’s critical software safe. The company has been applying its patented technology from over a decade of CMU research to solving the difficult challenge of making software safer. ForAllSecure has partnered with Fortune 1000 companies in aerospace, automotive and high-tech industries, as well as the US Department of Defense to integrate Mayhem into software development cycles for continuous security. Profitable and revenue-funded, the company is scaling rapidly.
+
+* [https://forallsecure.com/](https://forallsecure.com/)
+* [https://forallsecure.com/mayhem-for-code](https://forallsecure.com/mayhem-for-code)
