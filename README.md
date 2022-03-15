@@ -98,7 +98,7 @@ The action accepts the follow inputs:
 
 ### Getting your Mayhem for Code token
 
-The Actions example above refer to a Mayhem for Code token:
+The Actions example above refers to a Mayhem for Code token:
 
 ```yaml
 with:
@@ -110,6 +110,8 @@ In order to obtain your Mayhem token, perform the following steps:
 1. Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account.
 2. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
 3. Copy and paste your Mayhem token to your GitHub Secrets.
+
+> **Note:** See the official GitHub documentation for setting up your [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization).
 
 # Reports and GitHub Code Scanning
 
