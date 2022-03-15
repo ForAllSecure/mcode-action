@@ -16,7 +16,7 @@ Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) tod
 
 ## Usage
 
-Create a file in your GitHub repository at:
+Create a file in *your* GitHub repository at:
 
 ```sh
 .github/workflows/mayhem.yml
@@ -105,8 +105,14 @@ with:
   mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
 ```
 
-Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account. Then, click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token. Finally, copy and paste your Mayhem token to your GitHub Secrets.
+In order to obtain your Mayhem token, perform the following steps:
+
+1. Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account.
+2. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
+3. Copy and paste your Mayhem token to your GitHub Secrets.
 
 # Reports and GitHub Code Scanning
 
 Mayhem for Code generates SARIF reports for your code's security testing results, with the output file generated at the file path according to the `sarif-output` parameter. To upload the SARIF report to GitHub, use the `sarif_file` parameter, respectively, allowing you to view these results in the `Security` tab of your repository as well as your for your individual pull requests.
+
+![code-scanning-alert](code-scanning-alert.png)
