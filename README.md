@@ -98,20 +98,20 @@ jobs:
           sarif_file: sarif
 ```
 
-The mCode GitHUb Action accepts the following inputs:
+The mCode Action accepts the following inputs:
 
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
 | ✔️ | `mayhem-token` | string | Mayhem for Code account token |
-|   | `args` | string | Additional arguments such as specifying the corpus directory path |
-|   | `sarif-output` | string | Path to the SARIF report output file | 
-|   | `sarif_file` | string | Path to the SARIF report input file to be uploaded to GitHub |
+|   | `args` | string | Additional arguments such as specifying the `--corpus` directory path |
+|   | `sarif-output` | string | Path for generating a SARIF report output file |
+|   | `sarif_file` | string | Path for uploading a SARIF report input file to GitHub |
 
 ## Reports and GitHub Code Scanning
 
 Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~:text=The%20Static%20Analysis%20Results%20Interchange,approved%20as%20an%20OASIS%20standard.) for your application security testing results.
 
-SARIF report output files are genereated using the `sarif-output` parameter. To upload the SARIF report to GitHub, use the `sarif_file` parameter, respectively. 
+SARIF report output files are generated using the `sarif-output` parameter, which specifies an output file path. Similarly, to upload the SARIF report to GitHub, use the `sarif_file` parameter to specify the location of an input SARIF file to upload to GitHub.
 
 ```sh
 - name: Start analysis
