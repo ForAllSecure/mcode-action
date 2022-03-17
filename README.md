@@ -6,7 +6,7 @@ A GitHub Action for using Mayhem for Code to check for reliability, performance 
 
 ## About Mayhem for Code
 
-🧪 Modern App Testing: Mayhem for Code is a application security testing tool that catches reliability, performance and security bugs before they hit production.
+🧪 Modern App Testing: Mayhem for Code is an application security testing tool that catches reliability, performance and security bugs before they hit production.
 
 🧑‍💻 For Developers, by developers: The engineers building software are the best equipped to fix bugs, including security bugs. As engineers ourselves, we're building tools that we wish existed to make our job easier!
 
@@ -20,7 +20,7 @@ To use the Mayhem for Code GitHub Action, perform the following steps:
 
 1. Create a Mayhem account and copy and paste your account token to GitHub Secrets.
 
-    a. Navigate to [mayhem.forallsecure.com](mayhem.forallsecure.com) to register an account.
+    a. Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
 
     b. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
 
