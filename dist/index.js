@@ -73,10 +73,6 @@ function run() {
             const mayhemToken = core.getInput('mayhem-token', { required: true });
             const sarifOutput = core.getInput('sarif-output') || '';
             const args = (core.getInput('args') || '').split(' ');
-            // substitution first
-            if (args.includes('--image')) {
-                args[args.indexOf('--image')] = '--baseimage';
-            }
             // defaults next
             if (!args.includes('--duration')) {
                 args.push('--duration', '30');
