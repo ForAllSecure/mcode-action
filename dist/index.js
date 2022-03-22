@@ -109,9 +109,9 @@ function run() {
       mkdir -p ${sarifOutput};
     fi
     echo "Looking for cargo fuzz targets..."
-    is_rust=$(cargo fuzz list 2>/dev/null) || echo "No cargo fuzz targets found. Proceeding." ;
+    is_rust=$(cargo fuzz list 2>/dev/null);
     if [ -n "$is_rust" ]; then
-      echo "cargo fuzz targets found. Proceeding."
+      echo "Cargo fuzz targets found. Proceeding."
       for fuzz_target in $is_rust; do
         cargo fuzz build $fuzz_target;
         for path in $(ls fuzz/target/*/*/$fuzz_target); do
@@ -128,6 +128,7 @@ function run() {
         done
       done
     else
+      echo "No cargo fuzz targets found. Proceeding."
       sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
       fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
       run=$(${cli} run . ${argsString});
