@@ -108,8 +108,10 @@ function run() {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    is_rust=$(cargo fuzz list);
+    echo "Looking for cargo fuzz targets..."
+    is_rust=$(cargo fuzz list) || echo "No cargo fuzz targets found. Proceeding." ;
     if [ -n "$is_rust" ]; then
+      echo "cargo fuzz targets found. Proceeding."
       for fuzz_target in $is_rust; do
         cargo fuzz build $fuzz_target;
         for path in $(ls fuzz/target/*/*/$fuzz_target); do
