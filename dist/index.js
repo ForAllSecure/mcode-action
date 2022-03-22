@@ -109,7 +109,7 @@ function run() {
       mkdir -p ${sarifOutput};
     fi
     echo "Looking for cargo fuzz targets..."
-    is_rust=$(cargo fuzz list) || echo "No cargo fuzz targets found. Proceeding." ;
+    is_rust=$(cargo fuzz list 2>/dev/null) || echo "No cargo fuzz targets found. Proceeding." ;
     if [ -n "$is_rust" ]; then
       echo "cargo fuzz targets found. Proceeding."
       for fuzz_target in $is_rust; do
