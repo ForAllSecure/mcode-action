@@ -99,7 +99,7 @@ async function run(): Promise<void> {
           if [ -n "${sarifOutput}" ]; then
             ${cli} wait $run -n ${account} --sarif ${sarifOutput}/$fuzz_target.sarif;
             run_number=$(echo $run | awk -F/ '{print $NF}')
-            curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v1/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > $fuzz_target.json
+            curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > $fuzz_target.json
           fi
         done
       done
@@ -111,7 +111,7 @@ async function run(): Promise<void> {
       if [ -n "${sarifOutput}" ]; then
         ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
         run_number=$(echo $run | awk -F/ '{print $NF}')
-        curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v1/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
+        curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
       fi
     fi
 `
