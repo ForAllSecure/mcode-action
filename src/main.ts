@@ -112,6 +112,9 @@ async function run(): Promise<void> {
       sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
       fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
       run=$(${cli} run . ${argsString});
+      if [ -n "$run" ]; then
+        exit 1
+      fi
       if [ -n "${sarifOutput}" ]; then
         ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
         run_number=$(echo $run | awk -F/ '{print $NF}')
