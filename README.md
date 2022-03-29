@@ -134,7 +134,7 @@ Once uploaded to GitHub, you can view test results in the `Security` tab of your
 
 ## How to Contribute
 
-You can make changes and re-compile the mCode GitHub Action by executing the following commands at the root of this repository:
+Modify the [`main.ts`](src/main.ts) file and re-compile the mCode GitHub Action by executing the following commands at the root of this repository:
 
 ```sh
 npm install ci
