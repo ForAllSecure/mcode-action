@@ -41,6 +41,7 @@ Your `mayhem.yml` file should look like the following:
 ```yaml
 name: Mayhem
 on:
+  push:
   pull_request:
   workflow_dispatch:
 
@@ -86,10 +87,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Start analysis
-        uses: ethan42/mcode-action@44343bdb4c774508c5b032f1cb24c805ccb5167e
+        uses: ForAllSecure/mcode-action@v1
         with:
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
+          args: --image ${{ steps.meta.outputs.tags }}
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
@@ -115,10 +116,10 @@ SARIF reports are generated using the `sarif-output` parameter, which specifies 
 
 ```sh
 - name: Start analysis
-  uses: ethan42/mcode-action@44343bdb4c774508c5b032f1cb24c805ccb5167e
+  uses: ForAllSecure/mcode-action@v1
   with:
     mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-    args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
+    args: --image ${{ steps.meta.outputs.tags }}
     sarif-output: sarif
 
 - name: Upload SARIF file(s)
@@ -130,6 +131,17 @@ SARIF reports are generated using the `sarif-output` parameter, which specifies 
 Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as your for your individual pull requests.
 
 ![code-scanning-alert](code-scanning-alert.png)
+
+## How to Contribute
+
+Fork this repository and modify the [`main.ts`](src/main.ts) file. Then, re-compile the mCode GitHub Action by executing the following commands at the root of your forked repository:
+
+```sh
+npm install ci
+yarn run build && yarn run package
+```
+
+Finally, submit a pull request for your changes from your forked repository to this repository and we'll review!
 
 ## About Us
 
