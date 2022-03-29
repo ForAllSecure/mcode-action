@@ -132,6 +132,17 @@ Once uploaded to GitHub, you can view test results in the `Security` tab of your
 
 ![code-scanning-alert](code-scanning-alert.png)
 
+## How to Contribute
+
+You can make changes and re-compile the mCode GitHub Action by executing the following commands at the root of this repository:
+
+```sh
+npm install ci
+yarn run build && yarn run package
+```
+
+Then, submit a PR for review!
+
 ## About Us
 
 ForAllSecure was founded with the mission to make the world’s critical software safe. The company has been applying its patented technology from over a decade of CMU research to solving the difficult challenge of making software safer. ForAllSecure has partnered with Fortune 1000 companies in aerospace, automotive and high-tech industries, as well as the US Department of Defense to integrate Mayhem into software development cycles for continuous security. Profitable and revenue-funded, the company is scaling rapidly.
