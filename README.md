@@ -41,6 +41,7 @@ Your `mayhem.yml` file should look like the following:
 ```yaml
 name: Mayhem
 on:
+  push:
   pull_request:
   workflow_dispatch:
 
@@ -86,10 +87,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Start analysis
-        uses: ethan42/mcode-action@44343bdb4c774508c5b032f1cb24c805ccb5167e
+        uses: ForAllSecure/mcode-action@v1
         with:
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
+          args: --image ${{ steps.meta.outputs.tags }}
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
@@ -115,10 +116,10 @@ SARIF reports are generated using the `sarif-output` parameter, which specifies 
 
 ```sh
 - name: Start analysis
-  uses: ethan42/mcode-action@44343bdb4c774508c5b032f1cb24c805ccb5167e
+  uses: ForAllSecure/mcode-action@v1
   with:
     mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-    args: --image ${{ steps.meta.outputs.tags }} --corpus file://mayhem/corpus
+    args: --image ${{ steps.meta.outputs.tags }}
     sarif-output: sarif
 
 - name: Upload SARIF file(s)
