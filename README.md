@@ -134,14 +134,14 @@ Once uploaded to GitHub, you can view test results in the `Security` tab of your
 
 ## How to Contribute
 
-Modify the [`main.ts`](src/main.ts) file and re-compile the mCode GitHub Action by executing the following commands at the root of this repository:
+For this repository and modify the [`main.ts`](src/main.ts) file. Then, re-compile the mCode GitHub Action by executing the following commands at the root of this repository:
 
 ```sh
 npm install ci
 yarn run build && yarn run package
 ```
 
-Then, submit a PR for review!
+Finally, submit a pull request for your changes from your forked repository to this repository and we'll review!
 
 ## About Us
 
