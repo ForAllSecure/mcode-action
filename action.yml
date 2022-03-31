@@ -15,6 +15,9 @@ inputs:
   sarif-output:
     description: SARIF output directory. You can upload to to GitHub using the 'github/codeql-action/upload-sarif@v1' action
     required: false
+  verbosity:
+    description: verbosity level for starting runs
+    required: false
   args:
     description: command line arguments to override CLI behavior
     required: false

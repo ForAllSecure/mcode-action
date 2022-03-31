@@ -76,6 +76,7 @@ function run() {
             });
             const mayhemToken = core.getInput("mayhem-token") || githubToken;
             const sarifOutput = core.getInput("sarif-output") || "";
+            const verbosity = core.getInput("verbosity") || "info";
             const args = (core.getInput("args") || "").split(" ");
             // defaults next
             if (!args.includes("--duration")) {
@@ -116,12 +117,12 @@ function run() {
     fi
     sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
-    run=$(${cli} run . --project ${repo.toLowerCase()} -n ${account} ${argsString});
+    run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} -n ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
-      ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
+      ${cli} --verbosity ${verbosity} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
       status=$(${cli} show --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
         exit 2
