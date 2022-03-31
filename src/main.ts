@@ -88,7 +88,12 @@ async function run(): Promise<void> {
       mkdir -p ${sarifOutput};
     fi
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
-    run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
+    if [ -z fuzz_target ]; then
+      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()}) --target ${repo.toLowerCase};
+    fi
+    else
+      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
+    fi
     if [ -z "$run" ]; then
       exit 1
     fi
