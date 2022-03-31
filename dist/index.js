@@ -87,7 +87,7 @@ function run() {
             const account = repo === null || repo === void 0 ? void 0 : repo.split("/")[0].toLowerCase();
             const project = repo === null || repo === void 0 ? void 0 : repo.split("/")[1].toLowerCase();
             if (repo === undefined) {
-                throw Error("Missing GITHUB_REPOSITORY environment variable. Are you not running this in a Github Action environement?");
+                throw Error("Missing GITHUB_REPOSITORY environment variable. Are you not running this in a Github Action environment?");
             }
             const event = JSON.parse((0, fs_1.readFileSync)(process.env["GITHUB_EVENT_PATH"] || "event.json", "utf-8")) || {};
             const event_pull_request = event.pull_request;
@@ -108,7 +108,6 @@ function run() {
             const argsString = args.join(" ");
             // decide on the application type
             const script = `
-    apt-get update && apt-get install -y jq
     set -x
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
@@ -125,8 +124,15 @@ function run() {
           [[ -e fuzz/corpus/$fuzz_target ]] && cp fuzz/corpus/$fuzz_target/* $fuzz_target/corpus/;
           sed -i 's,project: .*,project: ${repo.toLowerCase()},g' $fuzz_target/Mayhemfile;
           run=$(${cli} run $fuzz_target --corpus file://$(pwd)/$fuzz_target/corpus ${argsString});
+          if [ -z "$run" ]; then
+            exit 1
+          fi
           if [ -n "${sarifOutput}" ]; then
             ${cli} wait $run -n ${account} --sarif ${sarifOutput}/$fuzz_target.sarif;
+            status=$(${cli} show --format json $run | jq '.[0].status')
+            if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
+              exit 2
+            fi
             run_number=$(echo $run | awk -F/ '{print $NF}')
             curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > $fuzz_target.json
           fi
@@ -137,7 +143,6 @@ function run() {
       sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
       fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
       run=$(${cli} run . ${argsString});
-      echo "this is the run variable: $run"
       if [ -z "$run" ]; then
         exit 1
       fi
@@ -162,10 +167,13 @@ function run() {
             const res = yield cliRunning;
             if (res == 1) {
                 // TODO: should we print issues here?
-                throw new Error("The Mayhem for Code scan was unable to execute the Mayhem run for your target. Check your configuration.");
+                throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
+      Check your configuration. For package visibility/permissions issues, see
+      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
+      on how to set your package to 'Public'.`);
             }
             else if (res == 2) {
-                throw new Error("The Mayhem run for your target was unsuccessful.");
+                throw new Error("The Mayhem for Code scan detected the Mayhem run for your target was unsuccessful.");
             }
             if (githubToken !== undefined) {
                 const octokit = github.getOctokit(githubToken);

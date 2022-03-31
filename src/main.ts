@@ -84,7 +84,6 @@ async function run(): Promise<void> {
     // decide on the application type
 
     const script = `
-    apt-get update && apt-get install -y jq
     set -x
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
@@ -145,12 +144,12 @@ async function run(): Promise<void> {
     const res = await cliRunning;
     if (res == 1) {
       // TODO: should we print issues here?
-      throw new Error("The Mayhem for Code scan was unable to execute the Mayhem run for your target. \
-      Check your configuration. For package visibility/permissions issues, see \
-      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility \
-      on how to set your package to `Public`.");
+      throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
+      Check your configuration. For package visibility/permissions issues, see
+      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
+      on how to set your package to 'Public'.`);
     } else if (res == 2) {
-      throw new Error("The Mayhem for Code scan detected that the Mayhem run for your target was unsuccessful.");
+      throw new Error("The Mayhem for Code scan detected the Mayhem run for your target was unsuccessful.");
     }
 
     if (githubToken !== undefined) {
