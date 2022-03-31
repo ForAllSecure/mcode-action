@@ -87,20 +87,17 @@ async function run(): Promise<void> {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
-    fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
+    sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile || true;
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} -n ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
       ${cli} --verbosity ${verbosity} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
-      status=$(${cli} show --format json $run | jq '.[0].status')
+      status=$(${cli} --verbosity ${verbosity} show -n ${account} --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
         exit 2
       fi
-      run_number=$(echo $run | awk -F/ '{print $NF}')
-      curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
     fi
 `;
     process.env["MAYHEM_TOKEN"] = mayhemToken;
@@ -120,45 +117,6 @@ async function run(): Promise<void> {
       on how to set your package to 'Public'.`);
     } else if (res == 2) {
       throw new Error("The Mayhem for Code scan detected the Mayhem run for your target was unsuccessful.");
-    }
-
-    if (githubToken !== undefined) {
-      const octokit = github.getOctokit(githubToken);
-      const context = github.context;
-      const { pull_request } = context.payload;
-      const output = JSON.parse(readFileSync("mayhem.json", "utf-8")) || {};
-      core.info(`pull request ready: ${pull_request !== undefined}`);
-      if (pull_request !== undefined) {
-        await octokit.rest.issues.createComment({
-          ...context.repo,
-          issue_number: pull_request.number,
-          body: `# [Mayhem for Code](${mayhemUrl}) Report :warning:
-
-Merging [#${pull_request.number}](${pull_request.html_url}) ${
-            pull_request.head.ref
-          } (${pull_request.head.sha.slice(0, 8)}) into ${
-            pull_request.base.ref
-          } (${pull_request.base.sha.slice(0, 8)})
-
-## Active Defects: ${output.n_defects} :x:
-
-## Testing Iterations Performed: ${output.tests_run} (${
-            output.cputime
-          } CPU seconds)
-
-## Testing Inputs Stored: ${output.n_testcase_reports}
-
-## Dynamic Block Coverage: ${
-            (output.run_attributes.n_blocks_covered * 100.0) /
-            output.run_attributes.n_blocks_total
-          }%
-
-[Continue to view full report in Mayhem for Code](${mayhemUrl}/${repo})
-
-`,
-        });
-      }
-      core.info(`token defined: ${githubToken !== undefined}`);
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
