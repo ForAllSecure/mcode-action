@@ -18,7 +18,13 @@ Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) tod
 
 To use the Mayhem for Code GitHub Action, perform the following steps:
 
-1. Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
+1. Create a Mayhem account and copy and paste your account token to GitHub Secrets.
+
+    a. Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
+
+    b. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
+
+    c. Copy and paste your Mayhem token to your [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization).
 
 2. Create a `mayhem.yml` file in your GitHub repository located at:
 
@@ -83,6 +89,7 @@ jobs:
       - name: Start analysis
         uses: ForAllSecure/mcode-action@v1
         with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           args: --image ${{ steps.meta.outputs.tags }}
           sarif-output: sarif
 
@@ -96,23 +103,22 @@ The mCode Action accepts the following inputs:
 
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
-|   | `mayhem-url` | string | Path to a custom Mayhem for Code instance. | https://mayhem.forallsecure.com |
-|   | `mayhem-token` | string | Mayhem for Code account token. Only required if overriding `mayhem-url` |
-|   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--tests` directory path |
+| ✔️ | `mayhem-token` | string | Mayhem for Code account token |
+|   | `args` | string | Additional arguments such as specifying the `--corpus` directory path |
 |   | `sarif-output` | string | Path for generating a SARIF report output file |
+|   | `sarif_file` | string | Path for uploading a SARIF report input file to GitHub |
 
 ## Reports and GitHub Code Scanning
 
 Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~:text=The%20Static%20Analysis%20Results%20Interchange,approved%20as%20an%20OASIS%20standard.) for your application security testing results.
 
-SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path.
+SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path. Similarly, to upload the SARIF report to GitHub, use the `sarif_file` parameter to specify the location of an input SARIF file to upload to GitHub.
 
-To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v1` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
-
-```yaml
+```sh
 - name: Start analysis
   uses: ForAllSecure/mcode-action@v1
   with:
+    mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
     args: --image ${{ steps.meta.outputs.tags }}
     sarif-output: sarif
 
