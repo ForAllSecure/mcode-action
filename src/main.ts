@@ -54,7 +54,7 @@ async function run(): Promise<void> {
     const project = repo?.split("/")[1].toLowerCase();
     if (repo === undefined) {
       throw Error(
-        "Missing GITHUB_REPOSITORY environment variable. Are you not running this in a Github Action environement?"
+        "Missing GITHUB_REPOSITORY environment variable. Are you not running this in a Github Action environment?"
       );
     }
     const event =
@@ -82,14 +82,22 @@ async function run(): Promise<void> {
     // decide on the application type
 
     const script = `
+    apt-get update && apt-get install -y jq
     set -x
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
     run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
+    if [ -z "$run" ]; then
+      exit 1
+    fi
     if [ -n "${sarifOutput}" ]; then
       ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
+      status=$(${cli} show --format json $run | jq '.[0].status')
+      if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
+        exit 2
+      fi
       run_number=$(echo $run | awk -F/ '{print $NF}')
       curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
     fi
@@ -103,9 +111,14 @@ async function run(): Promise<void> {
       ignoreReturnCode: true,
     });
     const res = await cliRunning;
-    if (res !== 0) {
+    if (res == 1) {
       // TODO: should we print issues here?
-      throw new Error("The Mayhem for Code scan found issues in the Target");
+      throw new Error("The Mayhem for Code scan was unable to execute the Mayhem run for your target. \
+      Check your configuration. For package visibility/permissions issues, see \
+      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility \
+      on how to set your package to `Public`.");
+    } else if (res == 2) {
+      throw new Error("The Mayhem for Code scan detected that your run for your target was unsuccessful.");
     }
 
     if (githubToken !== undefined) {
