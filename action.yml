@@ -3,8 +3,8 @@ description: "Automatically test your Rust targets with Mayhem"
 author: "ForAllSecure"
 inputs:
   mayhem-token:
-    description: Personal API token for authenticating to Mayhem (only required when using a custom mayhem-url)
-    required: false
+    description: Personal API token for authenticating to Mayhem
+    required: true
   mayhem-url:
     description: URL pointing to your Mayhem instance
     required: false
