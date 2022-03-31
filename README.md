@@ -98,7 +98,7 @@ The mCode Action accepts the following inputs:
 | --- | --- | --- | --- | ---
 |   | `mayhem-url` | string | Path to a custom Mayhem for Code instance. | https://mayhem.forallsecure.com |
 |   | `mayhem-token` | string | Mayhem for Code account token. Only required if overriding `mayhem-url` |
-|   | `args` | string | Additional arguments such as specifying the `--corpus` directory path |
+|   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--tests` directory path |
 |   | `sarif-output` | string | Path for generating a SARIF report output file |
 
 ## Reports and GitHub Code Scanning
