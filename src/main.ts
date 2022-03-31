@@ -87,7 +87,7 @@ async function run(): Promise<void> {
       mkdir -p ${sarifOutput};
     fi
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
-    run=$(${cli} run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
+    run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
     if [ -n "${sarifOutput}" ]; then
       ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
       run_number=$(echo $run | awk -F/ '{print $NF}')
