@@ -84,6 +84,7 @@ async function run(): Promise<void> {
     // decide on the application type
 
     const script = `
+    apt-get update && apt-get install -y jq
     set -x
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
@@ -140,7 +141,7 @@ async function run(): Promise<void> {
       // TODO: should we print issues here?
       throw new Error("The Mayhem for Code scan was unable to execute the Mayhem run for your target. Check your configuration.");
     } else if (res == 2) {
-      throw new Error("The Mayhem run for your target failed.")
+      throw new Error("The Mayhem run for your target was unsuccessful.");
     }
 
     if (githubToken !== undefined) {
