@@ -118,6 +118,10 @@ async function run(): Promise<void> {
       fi
       if [ -n "${sarifOutput}" ]; then
         ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
+        status=$(mayhem show --format json $run | jq '.[0].status')
+        if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
+          exit 2
+        fi
         run_number=$(echo $run | awk -F/ '{print $NF}')
         curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
       fi
@@ -132,9 +136,11 @@ async function run(): Promise<void> {
       ignoreReturnCode: true,
     });
     const res = await cliRunning;
-    if (res !== 0) {
+    if (res == 1) {
       // TODO: should we print issues here?
-      throw new Error("The Mayhem for Code scan found issues in the Target");
+      throw new Error("The Mayhem for Code scan was unable to execute the Mayhem run for your target. Check your configuration.");
+    } else if (res == 2) {
+      throw new Error("The Mayhem run for your target failed.")
     }
 
     if (githubToken !== undefined) {
