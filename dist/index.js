@@ -113,7 +113,6 @@ function run() {
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
     if [ -z fuzz_target ]; then
       run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()} --target ${repo.toLowerCase()});
-    fi
     else
       run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
     fi
