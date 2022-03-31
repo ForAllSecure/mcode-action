@@ -88,9 +88,9 @@ async function run(): Promise<void> {
     fi
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
     if [ -z fuzz_target ]; then
-      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()} --target ${repo.toLowerCase()});
+      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${project} --target ${project});
     else
-      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
+      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${project});
     fi
     if [ -z "$run" ]; then
       exit 1
@@ -119,7 +119,7 @@ async function run(): Promise<void> {
       throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
       Check your configuration. For package visibility/permissions issues, see
       https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
-      on how to set your package to 'Public'`);
+      on how to set your package to 'Public'.`);
     } else if (res == 2) {
       throw new Error("The Mayhem for Code scan detected that your run for your target was unsuccessful.");
     }
