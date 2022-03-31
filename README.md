@@ -18,7 +18,7 @@ Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) tod
 
 To use the Mayhem for Code GitHub Action, perform the following steps:
 
-1.  Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
+1. Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
 
 2. Create a `mayhem.yml` file in your GitHub repository located at:
 
