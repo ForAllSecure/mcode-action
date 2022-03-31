@@ -113,7 +113,7 @@ async function run(): Promise<void> {
       fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
       run=$(${cli} run . ${argsString});
       echo $run
-      if [ -z $run ]; then
+      if [ -z "$run" ]; then
         exit 1
       fi
       if [ -n "${sarifOutput}" ]; then
