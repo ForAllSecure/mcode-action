@@ -29,14 +29,14 @@ async function mcodeCLI(): Promise<string> {
 
 async function run(): Promise<void> {
   try {
-    // Disable auto udpates since we always get the latest CLI
-    process.env["SKIP_MAPI_AUTO_UPDATE"] = "true";
     const cli = await mcodeCLI();
 
     // Load inputs
     const mayhemUrl: string =
       core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
-    const githubToken: string = core.getInput("github-token", {required: true});
+    const githubToken: string = core.getInput("github-token", {
+      required: true,
+    });
     const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const args: string[] = (core.getInput("args") || "").split(" ");

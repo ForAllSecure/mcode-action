@@ -7,11 +7,7 @@
 # 1. Create a Mayhem for Code account at
 #    https://mayhem.forallsecure.com/ (free trial)
 #
-# 2. Create an API authentication token
-#
-# 3. Add the API authentication token as a a secret in GitHub called "MAYHEM_TOKEN"
-#
-# 4. Update the "Build your target" step to build your target
+# 2. Update the "Build your target" step to build your target
 #
 # If you have any questions, please contact us at support@forallsecure.com
 
@@ -37,17 +33,7 @@ jobs:
         uses: ForAllSecure/mcode-action@v1
         continue-on-error: true
         with:
-          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          mayhem-url: ${{ secrets.MAYHEM_URL }}
-          sarif-report: mcode.sarif
-          html: mcode.html
-
-      # Archive HTML report
-      - name: Archive Mayhem for Code report
-        uses: actions/upload-artifact@v2
-        with:
-          name: mcode-report
-          path: mcode.html
+          sarif-output: results.sarif
 
       # Upload SARIF file (only available on public repos or github
       # enterprise). If you cannot use this action, other report format are
@@ -55,4 +41,4 @@ jobs:
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v1
         with:
-          sarif_file: mcode.sarif
+          sarif_file: results.sarif
