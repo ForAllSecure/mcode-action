@@ -88,7 +88,7 @@ async function run(): Promise<void> {
     fi
     sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
-    run=$(${cli} run . -n ${account} ${argsString});
+    run=$(${cli} run . --project ${repo.toLowerCase()} -n ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
