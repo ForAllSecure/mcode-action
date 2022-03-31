@@ -143,7 +143,7 @@ function run() {
       fi
       if [ -n "${sarifOutput}" ]; then
         ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
-        status=$(mayhem show --format json $run | jq '.[0].status')
+        status=$(${cli} --format json $run | jq '.[0].status')
         if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
           exit 2
         fi
