@@ -112,7 +112,7 @@ async function run(): Promise<void> {
       sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
       fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
       run=$(${cli} run . ${argsString});
-      echo $run
+      echo "this is the run variable: $run"
       if [ -z "$run" ]; then
         exit 1
       fi
