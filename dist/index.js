@@ -106,14 +106,13 @@ function run() {
             const argsString = args.join(" ");
             // decide on the application type
             const script = `
-    apt-get update && apt-get install -y jq
     set -x
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
     if [ -z fuzz_target ]; then
-      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()}) --target ${repo.toLowerCase};
+      run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()} --target ${repo.toLowerCase()});
     fi
     else
       run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
@@ -141,10 +140,10 @@ function run() {
             const res = yield cliRunning;
             if (res == 1) {
                 // TODO: should we print issues here?
-                throw new Error("The Mayhem for Code scan was unable to execute the Mayhem run for your target. \
-      Check your configuration. For package visibility/permissions issues, see \
-      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility \
-      on how to set your package to `Public`.");
+                throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
+      Check your configuration. For package visibility/permissions issues, see
+      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
+      on how to set your package to 'Public'`);
             }
             else if (res == 2) {
                 throw new Error("The Mayhem for Code scan detected that your run for your target was unsuccessful.");
