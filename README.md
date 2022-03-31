@@ -84,12 +84,12 @@ jobs:
         uses: ForAllSecure/mcode-action@v1
         with:
           args: --image ${{ steps.meta.outputs.tags }}
-          sarif-output: results.sarif
+          sarif-output: sarif
 
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v1
         with:
-          sarif_file: results.sarif
+          sarif_file: sarif
 ```
 
 The mCode Action accepts the following inputs:
