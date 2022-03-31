@@ -107,7 +107,7 @@ Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~
 
 SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path.
 
-To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v1` action with the `sarif_file` parameter to specify the location of an input SARIF file to upload to GitHub.
+To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v1` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
 
 ```yaml
 - name: Start analysis
