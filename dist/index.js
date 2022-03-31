@@ -114,35 +114,12 @@ function run() {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    echo "Looking for cargo fuzz targets..."
-    is_rust=$(cargo fuzz list 2>/dev/null);
-    if [ -n "$is_rust" ]; then
-      echo "Cargo fuzz targets found. Proceeding."
-      for fuzz_target in $is_rust; do
-        cargo fuzz build $fuzz_target;
-        for path in $(ls fuzz/target/*/*/$fuzz_target); do
-          ${cli} package $path -o $fuzz_target;
-          rm -rf $fuzz_target/root/lib;
-          [[ -e fuzz/corpus/$fuzz_target ]] && cp fuzz/corpus/$fuzz_target/* $fuzz_target/corpus/;
-          sed -i 's,project: .*,project: ${repo.toLowerCase()},g' $fuzz_target/Mayhemfile;
-          run=$(${cli} run $fuzz_target --corpus file://$(pwd)/$fuzz_target/corpus ${argsString});
-          if [ -n "${sarifOutput}" ]; then
-            ${cli} wait $run -n ${account} --sarif ${sarifOutput}/$fuzz_target.sarif;
-            run_number=$(echo $run | awk -F/ '{print $NF}')
-            curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > $fuzz_target.json
-          fi
-        done
-      done
-    else
-      echo "No cargo fuzz targets found. Proceeding."
-      sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile;
-      fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
-      run=$(${cli} run . ${argsString});
-      if [ -n "${sarifOutput}" ]; then
-        ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
-        run_number=$(echo $run | awk -F/ '{print $NF}')
-        curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
-      fi
+    fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
+    run=$(${cli} run . ${argsString} -n ${account} --project ${repo.toLowerCase()});
+    if [ -n "${sarifOutput}" ]; then
+      ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
+      run_number=$(echo $run | awk -F/ '{print $NF}')
+      curl -H 'X-Mayhem-Token: token ${mayhemToken}' ${mayhemUrl}/api/v2/namespace/${account}/project/${project}/target/$fuzz_target/run/$run_number > mayhem.json
     fi
 `;
             process.env["MAYHEM_TOKEN"] = mayhemToken;
