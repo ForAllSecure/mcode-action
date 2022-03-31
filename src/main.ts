@@ -87,6 +87,9 @@ async function run(): Promise<void> {
       mkdir -p ${sarifOutput};
     fi
     fuzz_target=$(grep target: Mayhemfile | awk '{print $2}')
+    echo ${repo}
+    echo ${account}
+    echo ${project}
     if [ -z fuzz_target ]; then
       run=$(${cli} --verbosity debug run . ${argsString} -n ${account} --project ${project} --target ${project});
     else
