@@ -4,7 +4,7 @@ author: "ForAllSecure"
 inputs:
   mayhem-token:
     description: Personal API token for authenticating to Mayhem
-    required: true
+    required: false
   mayhem-url:
     description: URL pointing to your Mayhem instance
     required: false

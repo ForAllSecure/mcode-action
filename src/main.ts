@@ -36,10 +36,8 @@ async function run(): Promise<void> {
     // Load inputs
     const mayhemUrl: string =
       core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
-    const githubToken: string | undefined = core.getInput("github-token");
-    const mayhemToken: string = core.getInput("mayhem-token", {
-      required: true,
-    });
+    const githubToken: string = core.getInput("github-token", {required: true});
+    const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const args: string[] = (core.getInput("args") || "").split(" ");
     // defaults next

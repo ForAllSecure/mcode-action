@@ -73,10 +73,8 @@ function run() {
             const cli = yield mcodeCLI();
             // Load inputs
             const mayhemUrl = core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
-            const githubToken = core.getInput("github-token");
-            const mayhemToken = core.getInput("mayhem-token", {
-                required: true,
-            });
+            const githubToken = core.getInput("github-token", { required: true });
+            const mayhemToken = core.getInput("mayhem-token") || githubToken;
             const sarifOutput = core.getInput("sarif-output") || "";
             const args = (core.getInput("args") || "").split(" ");
             // defaults next
