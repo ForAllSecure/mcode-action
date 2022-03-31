@@ -119,7 +119,7 @@ async function run(): Promise<void> {
       fi
       if [ -n "${sarifOutput}" ]; then
         ${cli} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
-        status=$(${cli} --format json $run | jq '.[0].status')
+        status=$(${cli} show --format json $run | jq '.[0].status')
         if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
           exit 2
         fi
