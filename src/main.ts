@@ -87,7 +87,6 @@ async function run(): Promise<void> {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    sed -i 's,project: .*,project: ${repo.toLowerCase()},g' Mayhemfile || true;
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} -n ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
