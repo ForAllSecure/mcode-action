@@ -43,7 +43,7 @@ async function run(): Promise<void> {
     const args: string[] = (core.getInput("args") || "").split(" ");
     // defaults next
     if (!args.includes("--duration")) {
-      args.push("--duration", "30");
+      args.push("--duration", "60");
     }
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
