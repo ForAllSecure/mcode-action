@@ -98,8 +98,10 @@ The mCode Action accepts the following inputs:
 | --- | --- | --- | --- | ---
 |   | `mayhem-url` | string | Path to a custom Mayhem for Code instance. | https://mayhem.forallsecure.com |
 |   | `mayhem-token` | string | Mayhem for Code account token. Only required if overriding `mayhem-url` |
-|   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--tests` directory path |
+|   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--tests` directory path for a seed test suite |
 |   | `sarif-output` | string | Path for generating a SARIF report output file |
+
+📖 See the [CI/CD](https://mayhem.forallsecure.com/docs/mayhem-ci-cd/fuzzing-in-your-pipeline/) docs for more information and guides on using the mCode GitHub Action!
 
 ## Reports and GitHub Code Scanning
 
@@ -143,3 +145,4 @@ ForAllSecure was founded with the mission to make the world’s critical softwar
 
 * [https://forallsecure.com/](https://forallsecure.com/)
 * [https://forallsecure.com/mayhem-for-code](https://forallsecure.com/mayhem-for-code)
+* [https://community.forallsecure.com/](https://community.forallsecure.com/)
