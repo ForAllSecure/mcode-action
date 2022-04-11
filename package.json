@@ -31,7 +31,6 @@
     "@actions/github": "^5.0.0",
     "@actions/tool-cache": "^1.7.1",
     "axios": "^0.24.0",
-    "ci": "^2.1.1",
     "slugify": "^1.5.3",
     "yarn": "^1.22.17"
   },
