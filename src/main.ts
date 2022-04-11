@@ -87,13 +87,13 @@ async function run(): Promise<void> {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} -n ${account} ${argsString});
+    run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
-      ${cli} --verbosity ${verbosity} wait $run -n ${account} --sarif ${sarifOutput}/target.sarif;
-      status=$(${cli} --verbosity ${verbosity} show -n ${account} --format json $run | jq '.[0].status')
+      ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/target.sarif;
+      status=$(${cli} --verbosity ${verbosity} show --owner ${account} --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
         exit 2
       fi
@@ -115,7 +115,9 @@ async function run(): Promise<void> {
       https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
       on how to set your package to 'Public'.`);
     } else if (res == 2) {
-      throw new Error("The Mayhem for Code scan detected the Mayhem run for your target was unsuccessful.");
+      throw new Error(
+        "The Mayhem for Code scan detected the Mayhem run for your target was unsuccessful."
+      );
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
