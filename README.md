@@ -124,7 +124,7 @@ To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif
     sarif_file: sarif
 ```
 
-Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as your for your individual pull requests.
+Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as for your individual pull requests.
 
 ![code-scanning-alert](code-scanning-alert.png)
 
