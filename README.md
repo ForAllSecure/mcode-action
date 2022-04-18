@@ -124,7 +124,7 @@ To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif
     sarif_file: sarif
 ```
 
-Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as your for your individual pull requests.
+Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as for your individual pull requests.
 
 ![code-scanning-alert](code-scanning-alert.png)
 
@@ -132,8 +132,9 @@ Once uploaded to GitHub, you can view test results in the `Security` tab of your
 
 Fork this repository and modify the [`main.ts`](src/main.ts) file. Then, re-compile the mCode GitHub Action by executing the following commands at the root of your forked repository:
 
+> **Note:** You will have to install `npm` and `yarn`. See the official [documentation](https://classic.yarnpkg.com/lang/en/docs/install) for more info.
+
 ```sh
-npm install ci
 yarn run build && yarn run package
 ```
 
