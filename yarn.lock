@@ -1602,11 +1602,6 @@
   "resolved" "https://registry.npmjs.org/ci-info/-/ci-info-3.2.0.tgz"
   "version" "3.2.0"
 
-"ci@^2.1.1":
-  "integrity" "sha512-StBCU1G9zbhgVBqvslvOpT601zme9YfyZaUSjgXCtfnIynPuDBHX85WwnXv5cnh74bYo8S3xfPpI41yk1jZmRw=="
-  "resolved" "https://registry.npmjs.org/ci/-/ci-2.1.1.tgz"
-  "version" "2.1.1"
-
 "cjs-module-lexer@^0.6.0":
   "integrity" "sha512-uc2Vix1frTfnuzxxu1Hp4ktSvM3QaI4oXl4ZUqL1wjTu/BGki9TrCWoqLTg/drR1KwAEarXuRFCG2Svr1GxPFw=="
   "resolved" "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-0.6.0.tgz"
