@@ -89,9 +89,9 @@ async function run(): Promise<void> {
     fi
     target=$(grep "target: " Mayhemfile)
     if [ -z "$target" ]; then
-      run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --target ${repo.toLowerCase()} --owner ${account} ${argsString});
+      run=$(${cli} --verbosity ${verbosity} run . --project ${project} --target ${project} --owner ${account} ${argsString});
     else
-      run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
+      run=$(${cli} --verbosity ${verbosity} run . --project ${project} --owner ${account} ${argsString});
     fi
     if [ -z "$run" ]; then
       exit 1
