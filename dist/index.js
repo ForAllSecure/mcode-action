@@ -116,12 +116,9 @@ function run() {
     else
       run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     fi
-
-    
     if [ -z "$run" ]; then
       exit 1
     fi
-    
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
       ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/$sarifName;
