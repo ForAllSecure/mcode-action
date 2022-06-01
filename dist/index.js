@@ -47,16 +47,17 @@ function mcodeCLI() {
         const os = "Linux";
         const bin = "mayhem";
         // Return cache if available
-        const cachedPath = tc.find(bin, cliVersion, os);
-        if (cachedPath) {
-            core.debug(`found cache: ${cachedPath}`);
-            return `${cachedPath}/${bin}`;
-        }
+        // const cachedPath = tc.find(bin, cliVersion, os);
+        // if (cachedPath) {
+        //   core.debug(`found cache: ${cachedPath}`);
+        //   return `${cachedPath}/${bin}`;
+        // }
         // Download the CLI and cache it if version is set
         const mcodePath = yield tc.downloadTool(`https://mayhem.forallsecure.com/cli/${os}/${bin}`);
         (0, fs_1.chmodSync)(mcodePath, 0o755);
-        const folder = yield tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
-        return `${folder}/${bin}`;
+        // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
+        // return `${folder}/${bin}`;
+        return mcodePath;
     });
 }
 function run() {
@@ -116,6 +117,8 @@ function run() {
     fi
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
+      run=$(echo $run | cut -f 2- -d /)
+      echo $run
       ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/$sarifName;
       status=$(${cli} --verbosity ${verbosity} show --owner ${account} --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
