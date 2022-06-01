@@ -12,11 +12,11 @@ async function mcodeCLI(): Promise<string> {
   const bin = "mayhem";
 
   // Return cache if available
-  const cachedPath = tc.find(bin, cliVersion, os);
-  if (cachedPath) {
-    core.debug(`found cache: ${cachedPath}`);
-    return `${cachedPath}/${bin}`;
-  }
+  // const cachedPath = tc.find(bin, cliVersion, os);
+  // if (cachedPath) {
+  //   core.debug(`found cache: ${cachedPath}`);
+  //   return `${cachedPath}/${bin}`;
+  // }
 
   // Download the CLI and cache it if version is set
   const mcodePath = await tc.downloadTool(
