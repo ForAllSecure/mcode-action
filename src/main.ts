@@ -50,7 +50,9 @@ async function run(): Promise<void> {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
 
-    const mayhemfile = args.includes("--file") ? args.at(args.indexOf("--file") + 1) : "Mayhemfile";
+    const mayhemfile = args.includes("--file")
+      ? args[args.indexOf("--file") + 1]
+      : "Mayhemfile";
 
     // Auto-generate target name
     const repo = process.env["GITHUB_REPOSITORY"];

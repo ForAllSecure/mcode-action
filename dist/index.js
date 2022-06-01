@@ -81,7 +81,9 @@ function run() {
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
-            const mayhemfile = args.includes("--file") ? args.at(args.indexOf("--file") + 1) : "Mayhemfile";
+            const mayhemfile = args.includes("--file")
+                ? args[args.indexOf("--file") + 1]
+                : "Mayhemfile";
             // Auto-generate target name
             const repo = process.env["GITHUB_REPOSITORY"];
             const account = repo === null || repo === void 0 ? void 0 : repo.split("/")[0].toLowerCase();

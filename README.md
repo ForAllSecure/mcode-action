@@ -135,7 +135,8 @@ Fork this repository and modify the [`main.ts`](src/main.ts) file. Then, re-comp
 > **Note:** You will have to install `npm` and `yarn`. See the official [documentation](https://classic.yarnpkg.com/lang/en/docs/install) for more info.
 
 ```sh
-npm install && yarn run build && yarn run package
+npm install
+yarn run build && yarn run package
 ```
 
 Finally, submit a pull request for your changes from your forked repository to this repository and we'll review!
