@@ -97,7 +97,7 @@ async function run(): Promise<void> {
     fi
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
-      run=$(echo $run | cut -f 2- -d /)
+      run=$(echo $run | awk -F/ {'print $(NF-2) "/" $(NF-1) "/" $(NF)'})
       echo $run
       ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/$sarifName;
       status=$(${cli} --verbosity ${verbosity} show --owner ${account} --format json $run | jq '.[0].status')
