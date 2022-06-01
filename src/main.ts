@@ -50,6 +50,8 @@ async function run(): Promise<void> {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
 
+    const mayhemfile = args.includes("--file") ? args.at(args.indexOf("--file") + 1) : "Mayhemfile";
+
     // Auto-generate target name
     const repo = process.env["GITHUB_REPOSITORY"];
     const account = repo?.split("/")[0].toLowerCase();
@@ -88,6 +90,7 @@ async function run(): Promise<void> {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
+    sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
