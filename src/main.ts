@@ -88,7 +88,7 @@ async function run(): Promise<void> {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} ${argsString});
+    run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
