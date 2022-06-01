@@ -95,11 +95,11 @@ async function run(): Promise<void> {
     fi
     sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
     image_found=$(grep "image: " ${mayhemfile});
-    if [ -z "$image_found" ]; then  
-      sed -i "s,image:.*,image: ${image},g" ${mayhemfile};
-    else
+    if [ -z "$image_found" ]; then
       echo >> ${mayhemfile};
       echo "image: ${image}" >> ${mayhemfile};
+    else
+      sed -i "s,image:.*,image: ${image},g" ${mayhemfile};
     fi
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
