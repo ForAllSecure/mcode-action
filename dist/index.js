@@ -84,6 +84,7 @@ function run() {
             const mayhemfile = args.includes("--file")
                 ? args[args.indexOf("--file") + 1]
                 : "Mayhemfile";
+            const image = args[args.indexOf("--image") + 1];
             // Auto-generate target name
             const repo = process.env["GITHUB_REPOSITORY"];
             const account = repo === null || repo === void 0 ? void 0 : repo.split("/")[0].toLowerCase();
@@ -115,6 +116,13 @@ function run() {
       mkdir -p ${sarifOutput};
     fi
     sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
+    image_found=$(grep "image: " ${mayhemfile});
+    if [ -z "$image_found" ]; then  
+      sed -i "s,image:.*,image: ${image},g" ${mayhemfile};
+    else
+      echo >> ${mayhemfile};
+      echo "image: ${image}" >> ${mayhemfile};
+    fi
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
