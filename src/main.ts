@@ -12,19 +12,20 @@ async function mcodeCLI(): Promise<string> {
   const bin = "mayhem";
 
   // Return cache if available
-  const cachedPath = tc.find(bin, cliVersion, os);
-  if (cachedPath) {
-    core.debug(`found cache: ${cachedPath}`);
-    return `${cachedPath}/${bin}`;
-  }
+  // const cachedPath = tc.find(bin, cliVersion, os);
+  // if (cachedPath) {
+  //   core.debug(`found cache: ${cachedPath}`);
+  //   return `${cachedPath}/${bin}`;
+  // }
 
   // Download the CLI and cache it if version is set
   const mcodePath = await tc.downloadTool(
     `https://mayhem.forallsecure.com/cli/${os}/${bin}`
   );
   chmodSync(mcodePath, 0o755);
-  const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
-  return `${folder}/${bin}`;
+  // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
+  // return `${folder}/${bin}`;
+  return mcodePath;
 }
 
 async function run(): Promise<void> {
@@ -48,6 +49,8 @@ async function run(): Promise<void> {
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
+
+    const mayhemfile = args.includes("--file") ? args.at(args.indexOf("--file") + 1) : "Mayhemfile";
 
     // Auto-generate target name
     const repo = process.env["GITHUB_REPOSITORY"];
@@ -87,12 +90,15 @@ async function run(): Promise<void> {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
+    sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
+      run=$(echo $run | awk -F/ {'print $(NF-2) "/" $(NF-1) "/" $(NF)'})
+      echo $run
       ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/$sarifName;
       status=$(${cli} --verbosity ${verbosity} show --owner ${account} --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
