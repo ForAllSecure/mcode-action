@@ -119,7 +119,7 @@ function run() {
     image_line=$(grep "image: " ${mayhemfile});
     if [ -n "$image_line" ]; then
       escaped_image_name=$(echo ${image} | sed 's/\//\\\//g' )
-      echo $escaped_image_name
+      echo "ESCAPED_IMAGE_NAME: $escaped_image_name"
       sed -i -E "s/#\s+image:.+|image:.+/image: $escaped_image_name/g;" ${mayhemfile};
     else
       echo >> ${mayhemfile};
