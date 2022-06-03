@@ -97,7 +97,7 @@ async function run(): Promise<void> {
     image_line=$(grep "image: " ${mayhemfile});
     if [ -n "$image_line" ]; then
       sed --version
-      escaped_image_name=$(echo "${image}" | sed "s|\/|\\\/|g")
+      escaped_image_name=$(echo "${image}" | sed -E "s|\/|\\\/|g")
       echo "ESCAPED_IMAGE_NAME: $escaped_image_name"
       sed -i -E "s/#\s+image:.+|image:.+/image: $escaped_image_name/g;" ${mayhemfile};
     else
