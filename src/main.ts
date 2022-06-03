@@ -94,12 +94,12 @@ async function run(): Promise<void> {
       mkdir -p ${sarifOutput};
     fi
     sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
-    image_found=$(grep "image: " ${mayhemfile});
-    if [ -z "$image_found" ]; then
+    image_line=$(grep "image: " ${mayhemfile});
+    if [ -z "$image_line" ]; then
       echo >> ${mayhemfile};
       echo "image: ${image}" >> ${mayhemfile};
     else
-      sed -i "s,image:.*,image: ${image},g" ${mayhemfile};
+      sed -i -E "s/#\s+image:.+/image: ${image}/g; s/image:.+/image: ${image}/g;" ${mayhemfile};
     fi
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
