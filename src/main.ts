@@ -96,7 +96,7 @@ async function run(): Promise<void> {
     sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
     image_line=$(grep "image: " ${mayhemfile});
     if [ -n "$image_line" ]; then
-      sed -i -E "s,#\s+image:.+|image:.+,image: ${image},g;" ${mayhemfile};
+      sed -i -E "s,#\s+image:.+,image: ${image},g; s,image:.+,image: ${image},g;" ${mayhemfile};
     else
       echo >> ${mayhemfile};
       echo "image: ${image}" >> ${mayhemfile};
