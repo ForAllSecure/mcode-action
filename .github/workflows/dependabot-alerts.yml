@@ -1,7 +1,6 @@
 name: 'Dependabot Alerts Action'
 
 on:
-  pull_request:
   workflow_dispatch:
   push:
     branches:
