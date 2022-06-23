@@ -1,8 +1,13 @@
 name: 'Dependabot Vulnerabilities Alerts'
 
 on:
-  schedule:
-    - cron: '0 */6 * * *' # every 6 hours
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# on:
+#   schedule:
+#     - cron: '0 */6 * * *' # every 6 hours
 
 jobs:
   main:
