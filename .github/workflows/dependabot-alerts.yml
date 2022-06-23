@@ -12,7 +12,7 @@ jobs:
       - uses: kunalnagarco/action-cve@vX.X.X
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          slack_webhook: ${{ secrets.https://hooks.slack.com/services/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 }}
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
           # pager_duty_integration_key: ${{ secrets.PAGER_DUTY_INTEGRATION_KEY }}
           # zenduty_api_key: ${{ secrets.ZENDUTY_API_KEY }}
           # zenduty_service_id: ${{ secrets.ZENDUTY_SERVICE_ID }}
