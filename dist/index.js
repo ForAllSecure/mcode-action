@@ -46,12 +46,6 @@ function mcodeCLI() {
         const cliVersion = "latest";
         const os = "Linux";
         const bin = "mayhem";
-        // Return cache if available
-        // const cachedPath = tc.find(bin, cliVersion, os);
-        // if (cachedPath) {
-        //   core.debug(`found cache: ${cachedPath}`);
-        //   return `${cachedPath}/${bin}`;
-        // }
         // Download the CLI and cache it if version is set
         const mcodePath = yield tc.downloadTool(`https://mayhem.forallsecure.com/cli/${os}/${bin}`);
         (0, fs_1.chmodSync)(mcodePath, 0o755);

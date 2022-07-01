@@ -11,13 +11,6 @@ async function mcodeCLI(): Promise<string> {
   const os = "Linux";
   const bin = "mayhem";
 
-  // Return cache if available
-  // const cachedPath = tc.find(bin, cliVersion, os);
-  // if (cachedPath) {
-  //   core.debug(`found cache: ${cachedPath}`);
-  //   return `${cachedPath}/${bin}`;
-  // }
-
   // Download the CLI and cache it if version is set
   const mcodePath = await tc.downloadTool(
     `https://mayhem.forallsecure.com/cli/${os}/${bin}`
@@ -101,7 +94,7 @@ async function run(): Promise<void> {
       fi
     fi
     `;
-    
+
     process.env["MAYHEM_TOKEN"] = mayhemToken;
     process.env["MAYHEM_URL"] = mayhemUrl;
     process.env["MAYHEM_PROJECT"] = repo;
