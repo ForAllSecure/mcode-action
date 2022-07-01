@@ -81,10 +81,6 @@ function run() {
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
-            const mayhemfile = args.includes("--file")
-                ? args[args.indexOf("--file") + 1]
-                : "Mayhemfile";
-            const image = args[args.indexOf("--image") + 1];
             // Auto-generate target name
             const repo = process.env["GITHUB_REPOSITORY"];
             const account = repo === null || repo === void 0 ? void 0 : repo.split("/")[0].toLowerCase();
@@ -115,29 +111,19 @@ function run() {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
-    image_found=$(grep "image: " ${mayhemfile});
-    if [ -z "$image_found" ]; then
-      echo >> ${mayhemfile};
-      echo "image: ${image}" >> ${mayhemfile};
-    else
-      sed -i "s,image:.*,image: ${image},g" ${mayhemfile};
-    fi
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
-      run=$(echo $run | awk -F/ {'print $(NF-2) "/" $(NF-1) "/" $(NF)'})
-      echo $run
       ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/$sarifName;
       status=$(${cli} --verbosity ${verbosity} show --owner ${account} --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
         exit 2
       fi
     fi
-`;
+    `;
             process.env["MAYHEM_TOKEN"] = mayhemToken;
             process.env["MAYHEM_URL"] = mayhemUrl;
             process.env["MAYHEM_PROJECT"] = repo;
