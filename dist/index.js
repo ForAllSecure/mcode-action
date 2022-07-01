@@ -115,22 +115,12 @@ function run() {
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
-    sed -i "s,project:.*,project: ${repo.toLowerCase()},g" ${mayhemfile};
-    image_found=$(grep "image: " ${mayhemfile});
-    if [ -z "$image_found" ]; then
-      echo >> ${mayhemfile};
-      echo "image: ${image}" >> ${mayhemfile};
-    else
-      sed -i "s,image:.*,image: ${image},g" ${mayhemfile};
-    fi
     run=$(${cli} --verbosity ${verbosity} run . --project ${repo.toLowerCase()} --owner ${account} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
-      run=$(echo $run | awk -F/ {'print $(NF-2) "/" $(NF-1) "/" $(NF)'})
-      echo $run
       ${cli} --verbosity ${verbosity} wait $run --owner ${account} --sarif ${sarifOutput}/$sarifName;
       status=$(${cli} --verbosity ${verbosity} show --owner ${account} --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
