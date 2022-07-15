@@ -14,6 +14,10 @@ async function mcodeCLI(): Promise<string> {
   const os = "Linux";
   const bin = "mayhem";
 
+  if(process.env["MAYHEM_INSECURE"] == "true"){
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
+
   // Download the CLI and cache it if version is set
   const mcodePath = await tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
   chmodSync(mcodePath, 0o755);
