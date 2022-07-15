@@ -39,6 +39,7 @@ const core = __importStar(__nccwpck_require__(186));
 const exec = __importStar(__nccwpck_require__(514));
 const tc = __importStar(__nccwpck_require__(784));
 const fs_1 = __nccwpck_require__(747);
+const mayhemUrl = core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
 // Return local path to donwloaded or cached CLI
 function mcodeCLI() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -46,8 +47,11 @@ function mcodeCLI() {
         const cliVersion = "latest";
         const os = "Linux";
         const bin = "mayhem";
+        if (process.env["MAYHEM_INSECURE"] == "true") {
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        }
         // Download the CLI and cache it if version is set
-        const mcodePath = yield tc.downloadTool(`https://mayhem.forallsecure.com/cli/${os}/${bin}`);
+        const mcodePath = yield tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
         (0, fs_1.chmodSync)(mcodePath, 0o755);
         // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
         // return `${folder}/${bin}`;
@@ -60,7 +64,6 @@ function run() {
         try {
             const cli = yield mcodeCLI();
             // Load inputs
-            const mayhemUrl = core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
             const githubToken = core.getInput("github-token", {
                 required: true,
             });
