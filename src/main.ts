@@ -4,6 +4,9 @@ import * as github from "@actions/github";
 import * as tc from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 
+const mayhemUrl: string =
+  core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
+
 // Return local path to donwloaded or cached CLI
 async function mcodeCLI(): Promise<string> {
   // Get latest version from API
@@ -12,9 +15,7 @@ async function mcodeCLI(): Promise<string> {
   const bin = "mayhem";
 
   // Download the CLI and cache it if version is set
-  const mcodePath = await tc.downloadTool(
-    `https://mayhem.forallsecure.com/cli/${os}/${bin}`
-  );
+  const mcodePath = await tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
   chmodSync(mcodePath, 0o755);
   // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
   // return `${folder}/${bin}`;
@@ -26,8 +27,6 @@ async function run(): Promise<void> {
     const cli = await mcodeCLI();
 
     // Load inputs
-    const mayhemUrl: string =
-      core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
     const githubToken: string = core.getInput("github-token", {
       required: true,
     });
