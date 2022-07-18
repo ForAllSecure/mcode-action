@@ -47,9 +47,6 @@ function mcodeCLI() {
         const cliVersion = "latest";
         const os = "Linux";
         const bin = "mayhem";
-        if (process.env["MAYHEM_INSECURE"] == "true") {
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-        }
         // Download the CLI and cache it if version is set
         const mcodePath = yield tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
         (0, fs_1.chmodSync)(mcodePath, 0o755);
