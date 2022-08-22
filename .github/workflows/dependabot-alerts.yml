@@ -1,8 +1,12 @@
 name: 'Dependabot Alerts Action'
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '00 00 * * *' # 00 00 indicates midnight--0 minutes and 0 hours--and the *s mean every day of every month
+  push:
+    branches:
+      - main
 
 jobs:
   main:
