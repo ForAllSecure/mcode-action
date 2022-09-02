@@ -83,6 +83,8 @@ jobs:
       - name: Start analysis
         uses: ForAllSecure/mcode-action@v1
         with:
+          mayhem-url: https://mayhem.forallsecure.com
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           args: --image ${{ steps.meta.outputs.tags }}
           sarif-output: sarif
 
@@ -97,9 +99,9 @@ The mCode Action accepts the following inputs:
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
 |   | `mayhem-url` | string | Path to a custom Mayhem for Code instance. | https://mayhem.forallsecure.com |
-|   | `mayhem-token` | string | Mayhem for Code account token. Only required if overriding `mayhem-url` |
-|   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--tests` directory path for a seed test suite |
-|   | `sarif-output` | string | Path for generating a SARIF report output file |
+|   | `mayhem-token` | string | Mayhem for Code account token. **Only required within `mayhem.yml` if overriding** `mayhem-url`. |
+|   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--tests` directory path for a seed test suite. |
+|   | `sarif-output` | string | Path for generating a SARIF report output file. |
 
 📖 See the [CI/CD](https://mayhem.forallsecure.com/docs/mayhem-ci-cd/fuzzing-in-your-pipeline/) docs for more information and guides on using the mCode GitHub Action!
 
