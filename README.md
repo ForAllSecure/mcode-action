@@ -99,7 +99,7 @@ The mCode Action accepts the following inputs:
 | Required | Input Name | Type | Description | Default
 | --- | --- | --- | --- | ---
 |   | `mayhem-url` | string | Path to a custom Mayhem for Code instance. | https://mayhem.forallsecure.com |
-|   | `mayhem-token` | string | Mayhem for Code account token. **Only required within `mayhem.yml` if overriding** `mayhem-url`. |
+|   | `mayhem-token` | string | Mayhem for Code account token. **Only required within** `mayhem.yml` **if overriding** `mayhem-url`. |
 |   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--testsuite` directory path for a seed test suite. |
 |   | `sarif-output` | string | Path for generating a SARIF report output file. |
 
