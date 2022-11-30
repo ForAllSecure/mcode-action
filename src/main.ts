@@ -89,8 +89,8 @@ async function run(): Promise<void> {
       ${cli} --verbosity ${verbosity} wait $run \
              --owner ${account} \
              --sarif ${sarifOutput}/$sarifName;
-      status=$(${cli} --verbosity ${verbosity} show 
-                      --owner ${account}
+      status=$(${cli} --verbosity ${verbosity} show \
+                      --owner ${account} \
                       --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
         exit 2
