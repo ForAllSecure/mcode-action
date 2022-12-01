@@ -57,7 +57,9 @@ jobs:
             triplet: x64-linux
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
@@ -77,19 +79,37 @@ jobs:
         with:
           context: .
           push: true
+          file: mayhem/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Start analysis
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+
+  mayhem:
+    needs: build
+    name: 'fuzz ${{ matrix.mayhemfile }}'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mayhemfile:
+          - mayhem/Mayhemfile.lighttpd
+          - mayhem/Mayhemfile.mayhemit
+          # Specify one or many Mayhemfiles here
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Start analysis for ${{ matrix.mayhemfile }}
         uses: ForAllSecure/mcode-action@v1
         with:
-          mayhem-url: https://mayhem.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ steps.meta.outputs.tags }}
+          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: sarif
 ```
