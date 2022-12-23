@@ -159,7 +159,7 @@ Fork this repository and modify the [`main.ts`](src/main.ts) file. Then, re-comp
 make dist-rebuild
 ```
 
-Finally, submit a pull request for your changes from your forked repository to this repository and we'll review!
+Finally, push your changes and submit a pull request from your forked repository to this repository and we'll review!
 
 ## About Us
 
