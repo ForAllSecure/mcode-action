@@ -103,7 +103,7 @@ function run() {
             const argsString = args.join(" ");
             // decide on the application type
             const script = `
-    set -x
+    set -xe
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
