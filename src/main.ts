@@ -74,7 +74,7 @@ async function run(): Promise<void> {
     // decide on the application type
 
     const script = `
-    set -x
+    set -xe
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
