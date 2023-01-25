@@ -103,6 +103,7 @@ jobs:
         mayhemfile:
           - mayhem/Mayhemfile.lighttpd
           - mayhem/Mayhemfile.mayhemit
+          # Specify one or many Mayhemfiles here
 
     steps:
       - uses: actions/checkout@v3
@@ -112,7 +113,7 @@ jobs:
         with:
           mayhem-url: https://mayhem.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 60
+          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
