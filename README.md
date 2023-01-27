@@ -120,7 +120,7 @@ jobs:
         with:
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 60
+          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
