@@ -20,6 +20,13 @@ To use the Mayhem for Code GitHub Action, perform the following steps:
 
 1. Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
 
+    1. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
+
+    2. Copy and paste your Mayhem token to your repo's [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization). You will need the following secrets configured for your repository:
+
+        * `MAYHEM_TOKEN`: Your Mayhem account API token.
+        * `MAYHEM_URL`: The URL of the Mayhem instance, such as `https://mayhem.forallsecure.com`.
+
 2. Create a `mayhem.yml` file in your GitHub repository located at:
 
     ```sh
@@ -80,13 +87,12 @@ jobs:
       - name: Set lowercase image name
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v3.2.0
         with:
           context: .
           push: true
-          file: mayhem/Dockerfile
+          file: Dockerfile
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -111,9 +117,9 @@ jobs:
       - name: Start analysis for ${{ matrix.mayhemfile }}
         uses: ForAllSecure/mcode-action@v1
         with:
-          mayhem-url: https://mayhem.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
+          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 60
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
