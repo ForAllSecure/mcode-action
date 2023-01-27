@@ -80,13 +80,12 @@ jobs:
       - name: Set lowercase image name
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v3.2.0
         with:
           context: .
           push: true
-          file: mayhem/Dockerfile
+          file: Dockerfile
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -103,7 +102,6 @@ jobs:
         mayhemfile:
           - mayhem/Mayhemfile.lighttpd
           - mayhem/Mayhemfile.mayhemit
-          # Specify one or many Mayhemfiles here
 
     steps:
       - uses: actions/checkout@v3
@@ -111,9 +109,9 @@ jobs:
       - name: Start analysis for ${{ matrix.mayhemfile }}
         uses: ForAllSecure/mcode-action@v1
         with:
-          mayhem-url: https://mayhem.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
+          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 60
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
