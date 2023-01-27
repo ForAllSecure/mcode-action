@@ -109,7 +109,6 @@ jobs:
         mayhemfile:
           - mayhem/Mayhemfile.lighttpd
           - mayhem/Mayhemfile.mayhemit
-          # Specify one or many Mayhemfiles here
 
     steps:
       - uses: actions/checkout@v3
