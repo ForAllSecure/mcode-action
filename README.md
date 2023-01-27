@@ -87,6 +87,7 @@ jobs:
       - name: Set lowercase image name
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v3.2.0
         with:
@@ -109,6 +110,7 @@ jobs:
         mayhemfile:
           - mayhem/Mayhemfile.lighttpd
           - mayhem/Mayhemfile.mayhemit
+          # Specify one or many Mayhemfiles here
 
     steps:
       - uses: actions/checkout@v3
@@ -144,17 +146,11 @@ Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~
 
 SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path.
 
-To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v1` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
+To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v2` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
 
 ```yaml
-- name: Start analysis
-  uses: ForAllSecure/mcode-action@v1
-  with:
-    args: --image ${{ steps.meta.outputs.tags }}
-    sarif-output: sarif
-
 - name: Upload SARIF file(s)
-  uses: github/codeql-action/upload-sarif@v1
+  uses: github/codeql-action/upload-sarif@v2
   with:
     sarif_file: sarif
 ```
