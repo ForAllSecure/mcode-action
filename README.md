@@ -20,6 +20,13 @@ To use the Mayhem for Code GitHub Action, perform the following steps:
 
 1. Navigate to [mayhem.forallsecure.com](https://mayhem.forallsecure.com/) to register an account.
 
+    1. Click your profile drop-down and go to *Settings* > *API Tokens* to access your account API token.
+
+    2. Copy and paste your Mayhem token to your repo's [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization). You will need the following secrets configured for your repository:
+
+        * `MAYHEM_TOKEN`: Your Mayhem account API token.
+        * `MAYHEM_URL`: The URL of the Mayhem instance, such as `https://mayhem.forallsecure.com`.
+
 2. Create a `mayhem.yml` file in your GitHub repository located at:
 
     ```sh
@@ -36,16 +43,19 @@ Your `mayhem.yml` file should look like the following:
 name: Mayhem
 on:
   push:
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
   build:
-    name: '${{ matrix.os }} shared=${{ matrix.shared }} ${{ matrix.build_type }}'
+    name: 'build'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -74,21 +84,25 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      - name: Set lowercase image name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v3.2.0
         with:
           context: .
           push: true
-          file: mayhem/Dockerfile
-          tags: ${{ steps.meta.outputs.tags }}
+          file: Dockerfile
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
 
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
+      image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}
 
   mayhem:
     needs: build
-    name: 'fuzz ${{ matrix.mayhemfile }}'
+    name: 'fuzz'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -104,9 +118,9 @@ jobs:
       - name: Start analysis for ${{ matrix.mayhemfile }}
         uses: ForAllSecure/mcode-action@v1
         with:
-          mayhem-url: https://mayhem.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
+          args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 60
           sarif-output: sarif
 
       - name: Upload SARIF file(s)
@@ -132,17 +146,11 @@ Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~
 
 SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path.
 
-To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v1` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
+To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v2` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
 
 ```yaml
-- name: Start analysis
-  uses: ForAllSecure/mcode-action@v1
-  with:
-    args: --image ${{ steps.meta.outputs.tags }}
-    sarif-output: sarif
-
 - name: Upload SARIF file(s)
-  uses: github/codeql-action/upload-sarif@v1
+  uses: github/codeql-action/upload-sarif@v2
   with:
     sarif_file: sarif
 ```
