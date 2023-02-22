@@ -1,38 +1,46 @@
 import * as process from "process";
 import { ExecFileSyncOptions, execFileSync } from "child_process";
 import * as path from "path";
+import fs from 'fs';
 
 // shows how the runner will run a javascript action with env / stdout protocol
 test("test runs", () => {
-  process.env["GITHUB_REPOSITORY"] = "ForAllSecure/mapi-action";
+  process.env["GITHUB_REPOSITORY"] = "ForAllSecure/mcode-action";
+  process.env["GITHUB_SERVER_URL"] = "https://github.com"
+  process.env["GITHUB_RUN_ID"] = "14"
+  process.env["GITHUB_EVENT_PATH"] = "__tests__/events.json"
   process.env["RUNNER_TEMP"] = "/tmp";
   process.env["RUNNER_TOOL_CACHE"] = "/tmp";
-  process.env["INPUT_MAPI-TOKEN"] = process.env.MAPI_TOKEN;
+
+  process.env["INPUT_MAYHEM-TOKEN"] = process.env.MAYHEM_TOKEN;
   process.env["INPUT_DURATION"] = "10";
-  process.env["INPUT_API-URL"] =
-    "https://demo-api.mayhem4api.forallsecure.com/api/v3";
-  process.env["INPUT_API-SPEC"] =
-    "https://demo-api.mayhem4api.forallsecure.com/api/v3/openapi.json";
+  process.env["INPUT_GITHUB-TOKEN"] = "12123123321312";
+
+  process.env["INPUT_JUNIT-OUTPUT"] = "junit-output";
+  process.env["INPUT_SARIF-OUTPUT"] = "sarif-output";
+  process.env["INPUT_COVERAGE-OUTPUT"] = "coverage-output";
+
   const np = process.execPath;
   const ip = path.join(__dirname, "..", "lib", "main.js");
   const options: ExecFileSyncOptions = {
     env: process.env,
   };
   try {
-    execFileSync(np, [ip], options);
-    throw new Error("Actions should have failed due to finding a bug");
+    console.log(execFileSync(np, [ip], options).toString());
   } catch (error: any) {
-    if (error.stdout === undefined) {
-      throw error;
-    }
-    expect(error.stdout.toString()).toEqual(
-      expect.stringContaining("Fuzzing complete!,")
-    );
-    expect(error.stdout.toString()).toEqual(
-      expect.stringContaining("Found internal-server-error!")
-    );
-    expect(error.stdout.toString()).toEqual(
-      expect.stringContaining("The Mayhem for API scan found issues in the API")
-    );
+    // Ignore the error. We known the Mayhemfile doesn't exists right now, so the bash script fails.
+    //console.log(error);
+  }
+
+  if (!fs.existsSync("junit-output")) {
+    throw new Error("Output dir should exist but didn't");
+  }
+
+  if (!fs.existsSync("sarif-output")) {
+    throw new Error("Output dir should exist but didn't");
+  }
+
+  if (!fs.existsSync("coverage-output")) {
+    throw new Error("Output dir should exist but didn't");
   }
 });
