@@ -1,8 +1,8 @@
 {
-  "name": "mapi-action",
+  "name": "mcode-action",
   "version": "1.0.0",
   "private": true,
-  "description": "Mayhem for API action",
+  "description": "Mayhem for Code action",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -16,12 +16,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ForAllSecure/mapi-action.git"
+    "url": "git+https://github.com/ForAllSecure/mcode-action.git"
   },
   "keywords": [
     "actions",
     "fuzzing",
-    "api",
+    "code",
     "security"
   ],
   "author": "ForAllSecure",
