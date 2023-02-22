@@ -114,9 +114,9 @@ function run() {
                 // $runName is a variable that is set in the bash script
                 waitArgs.push("--junit", `${junitOutput}/\${runName}.xml`);
             }
-            // if (coverageOutput) {
-            //   waitArgs.push("--coverage", `${coverageOutput}/`);
-            // }
+            if (coverageOutput) {
+                waitArgs.push("--coverage");
+            }
             // create wait args string
             const waitArgsString = waitArgs.join(" ");
             const script = `
