@@ -29,7 +29,7 @@ jobs:
       - uses: ./
         continue-on-error: true
         with:
-          mayhem-url: demo.forallsecure.com
+          mayhem-url: https://demo.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           junit-output: out/junit/
