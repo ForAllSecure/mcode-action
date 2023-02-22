@@ -6,8 +6,6 @@ jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
     env:
-      # see https://github.com/tango4567/solutions/issues/41
-      NODE_OPTIONS: --openssl-legacy-provider
       MAYHEM_TOKEN: ${{ secrets.MAYHEM_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
