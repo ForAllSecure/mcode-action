@@ -15,6 +15,12 @@ inputs:
   sarif-output:
     description: SARIF output directory. You can upload to to GitHub using the 'github/codeql-action/upload-sarif@v1' action
     required: false
+  junit-output:
+    description: jUnit output path. You can upload the artifact to GitHub using the 'actions/upload-artifact@v2' action
+    required: false
+  coverage-output:
+    description: coverage report output path (must be a directory). You can upload the artifacts to GitHub using the 'actions/upload-artifact@v2' action
+    required: false
   verbosity:
     description: verbosity level for starting runs
     required: false
