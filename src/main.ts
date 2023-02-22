@@ -75,10 +75,9 @@ async function run(): Promise<void> {
 
     const argsString = args.join(" ");
 
-
     // Generate arguments for wait command
     // sarif, junit, coverage
-    
+
     const waitArgs = [];
     if (sarifOutput) {
       // $runName is a variable that is set in the bash script

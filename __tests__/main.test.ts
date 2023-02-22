@@ -1,14 +1,14 @@
 import * as process from "process";
 import { ExecFileSyncOptions, execFileSync } from "child_process";
 import * as path from "path";
-import fs from 'fs';
+import fs from "fs";
 
 // shows how the runner will run a javascript action with env / stdout protocol
 test("test runs", () => {
   process.env["GITHUB_REPOSITORY"] = "ForAllSecure/mcode-action";
-  process.env["GITHUB_SERVER_URL"] = "https://github.com"
-  process.env["GITHUB_RUN_ID"] = "14"
-  process.env["GITHUB_EVENT_PATH"] = "__tests__/events.json"
+  process.env["GITHUB_SERVER_URL"] = "https://github.com";
+  process.env["GITHUB_RUN_ID"] = "14";
+  process.env["GITHUB_EVENT_PATH"] = "__tests__/events.json";
   process.env["RUNNER_TEMP"] = "/tmp";
   process.env["RUNNER_TOOL_CACHE"] = "/tmp";
 
