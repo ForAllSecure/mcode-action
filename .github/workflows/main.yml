@@ -55,5 +55,6 @@ jobs:
         with:
           sarif_file: out/sarif
 
-      - run: |
-        echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }})
+        run: |
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
