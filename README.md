@@ -131,13 +131,13 @@ jobs:
           sarif_file: sarif
           
       - name: Archive Coverage report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: coverage
 
       - name: Archive JUnit results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mcode-junit
           path: junit
