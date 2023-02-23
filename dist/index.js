@@ -144,6 +144,10 @@ function run() {
     run=$(${cli} --verbosity ${verbosity} run . \
                  --project ${repo.toLowerCase()} \
                  --owner ${account} ${argsString});
+
+    # Persist the run id to the GitHub output
+    echo "runId=$run" >> $GITHUB_OUTPUT
+
     if [ -z "$run" ]; then
       exit 1
     fi
