@@ -32,7 +32,7 @@ runs:
   main: "dist/index.js"
 outputs:
   runId:
-    description: The identifier of the run that this action triggers in Mayhem
+    description: The identifier of the run that this action triggered in Mayhem
 branding:
   icon: "shield"
   color: "red"
