@@ -13,7 +13,13 @@ inputs:
     required: false
     default: ${{ github.token }}
   sarif-output:
-    description: SARIF output directory. You can upload to to GitHub using the 'github/codeql-action/upload-sarif@v1' action
+    description: SARIF output path (must be a directory, doesn't have to exist yet). You can upload to to GitHub using the 'github/codeql-action/upload-sarif@v1' action
+    required: false
+  junit-output:
+    description: jUnit output path (must be a directory, doesn't have to exist yet). You can upload the artifact to GitHub using the 'actions/upload-artifact' action
+    required: false
+  coverage-output:
+    description: coverage report output path (must be a directory, doesn't have to exist yet). You can upload the artifacts to GitHub using the 'actions/upload-artifact' action
     required: false
   verbosity:
     description: verbosity level for starting runs
@@ -24,6 +30,9 @@ inputs:
 runs:
   using: "node16"
   main: "dist/index.js"
+outputs:
+  runId:
+    description: The identifier of the run that this action triggered in Mayhem
 branding:
   icon: "shield"
   color: "red"
