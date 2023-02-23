@@ -27,6 +27,7 @@ jobs:
           fetch-depth: 0
 
       - uses: ./
+        id: mcode-action
         continue-on-error: true
         with:
           mayhem-url: https://demo.forallsecure.com
@@ -53,3 +54,6 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: out/sarif
+
+      - run: |
+        echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
