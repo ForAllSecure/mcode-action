@@ -30,6 +30,9 @@ inputs:
 runs:
   using: "node16"
   main: "dist/index.js"
+outputs:
+  runIdentifier: 
+    description: The identifier of the run that this action triggers in Mayhem
 branding:
   icon: "shield"
   color: "red"
