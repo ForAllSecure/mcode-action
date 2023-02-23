@@ -39,13 +39,13 @@ jobs:
           args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
 
       - name: Archive Coverage report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: out/coverage/
 
       - name: Archive JUnit results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: mcode-junit
           path: out/junit/
