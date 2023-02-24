@@ -140,7 +140,11 @@ async function run(): Promise<void> {
     fi
 
     # download coverage (owner flag doesn't work for download)
-    ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput}
+    if [ -n "${coverageOutput}" ]; then
+      ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput}
+    else
+      ${cli} --verbosity ${verbosity} download ${account}/$run
+    fi
     `;
 
     process.env["MAYHEM_TOKEN"] = mayhemToken;
