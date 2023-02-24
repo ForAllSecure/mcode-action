@@ -140,7 +140,7 @@ async function run(): Promise<void> {
     fi
 
     # download coverage (owner flag doesn't work for download)
-    echo "coverageOutput=${coverageOutput}"
+    echo "coverageOutput=${coverageOutput}" 1>&2
     if [ -z "${coverageOutput}" ]; then
       ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput}
     else
