@@ -33,6 +33,7 @@ async function run(): Promise<void> {
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const verbosity: string = core.getInput("verbosity") || "info";
     const args: string[] = (core.getInput("args") || "").split(" ");
+    
     // defaults next
     if (!args.includes("--duration")) {
       args.push("--duration", "60");
@@ -41,15 +42,17 @@ async function run(): Promise<void> {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
 
-    // Auto-generate target name
     const repo = process.env["GITHUB_REPOSITORY"];
-    const account = repo?.split("/")[0].toLowerCase();
     if (repo === undefined) {
       throw Error(
         "Missing GITHUB_REPOSITORY environment variable. " +
           "Are you not running this in a Github Action environment?"
       );
     }
+    
+    // Auto-generate target name if not specified by the user
+    const owner: string = core.getInput("owner") || repo?.split("/")[0].toLowerCase();
+
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
@@ -80,17 +83,17 @@ async function run(): Promise<void> {
     fi
     run=$(${cli} --verbosity ${verbosity} run . \
                  --project ${repo.toLowerCase()} \
-                 --owner ${account} ${argsString});
+                 --owner ${owner} ${argsString});
     if [ -z "$run" ]; then
       exit 1
     fi
     if [ -n "${sarifOutput}" ]; then
       sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
       ${cli} --verbosity ${verbosity} wait $run \
-             --owner ${account} \
+             --owner ${owner} \
              --sarif ${sarifOutput}/$sarifName;
       status=$(${cli} --verbosity ${verbosity} show \
-                      --owner ${account} \
+                      --owner ${owner} \
                       --format json $run | jq '.[0].status')
       if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
         exit 2
