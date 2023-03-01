@@ -32,6 +32,7 @@ async function run(): Promise<void> {
     const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const verbosity: string = core.getInput("verbosity") || "info";
+    const owner: string = core.getInput("owner").toLowerCase();
     const args: string[] = (core.getInput("args") || "").split(" ");
     
     // defaults next
@@ -49,9 +50,6 @@ async function run(): Promise<void> {
           "Are you not running this in a Github Action environment?"
       );
     }
-    
-    // Auto-generate target name if not specified by the user
-    const owner: string = core.getInput("owner") || repo?.split("/")[0].toLowerCase();
 
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
