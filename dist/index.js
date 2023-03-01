@@ -169,8 +169,6 @@ function run() {
     fi
 
     # download coverage (owner flag doesn't work for download)
-    echo "SEE ME" 2>&1
-    echo "coverageOutput=${coverageOutput}" 2>&1
     if ! [ -z "${coverageOutput}" ]; then
       ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput}
     fi
