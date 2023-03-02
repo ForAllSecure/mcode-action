@@ -69,12 +69,14 @@ jobs:
         with:
           name: coverage-report
           path: out/coverage/
+          if-no-files-found: error
 
       - name: Archive JUnit results
         uses: actions/upload-artifact@v3
         with:
           name: mcode-junit
           path: out/junit/
+          if-no-files-found: error
           
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
