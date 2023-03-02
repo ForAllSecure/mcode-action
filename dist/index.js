@@ -73,6 +73,7 @@ function run() {
             const junitOutput = core.getInput("junit-output") || "";
             const coverageOutput = core.getInput("coverage-output") || "";
             const verbosity = core.getInput("verbosity") || "info";
+            const owner = core.getInput("owner").toLowerCase();
             const args = (core.getInput("args") || "").split(" ");
             // defaults next
             if (!args.includes("--duration")) {
@@ -81,9 +82,7 @@ function run() {
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
-            // Auto-generate target name
             const repo = process.env["GITHUB_REPOSITORY"];
-            const account = repo === null || repo === void 0 ? void 0 : repo.split("/")[0].toLowerCase();
             if (repo === undefined) {
                 throw Error("Missing GITHUB_REPOSITORY environment variable. " +
                     "Are you not running this in a Github Action environment?");
@@ -143,7 +142,7 @@ function run() {
     # Run mayhem
     run=$(${cli} --verbosity ${verbosity} run . \
                  --project ${repo.toLowerCase()} \
-                 --owner ${account} ${argsString});
+                 --owner ${owner} ${argsString});
 
     # Persist the run id to the GitHub output
     echo "runId=$run" >> $GITHUB_OUTPUT;
@@ -166,12 +165,12 @@ function run() {
     
     # wait for run to finish
     ${cli} --verbosity ${verbosity} wait $run \
-            --owner ${account} \
+            --owner ${owner} \
             ${waitArgsString};
 
     # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${verbosity} show \
-                    --owner ${account} \
+                    --owner ${owner} \
                     --format json $run | jq '.[0].status');
     if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
       exit 2;
@@ -179,7 +178,7 @@ function run() {
 
     # download coverage (owner flag doesn't work for download, prepend instead)
     if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput};
+      ${cli} --verbosity ${verbosity} download ${owner}/$run -o ${coverageOutput};
     fi
     `;
             process.env["MAYHEM_TOKEN"] = mayhemToken;
