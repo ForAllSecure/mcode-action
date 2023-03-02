@@ -40,9 +40,10 @@ jobs:
         with:
           sarif_file: out/sarif
 
-      - name: Print runId (${{ steps.mcode-action.outputs.runId }})
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!"; exit 1;
 
   test-all-outputs: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -80,9 +81,10 @@ jobs:
         with:
           sarif_file: out/sarif
 
-      - name: Print runId (${{ steps.mcode-action.outputs.runId }})
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!"; exit 1; 
 
   test-no-outputs: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -100,6 +102,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
 
-      - name: Print runId (${{ steps.mcode-action.outputs.runId }})
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!"; exit 1;
