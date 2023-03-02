@@ -28,7 +28,6 @@ jobs:
 
       - uses: ./
         id: mcode-action
-        continue-on-error: true
         with:
           mayhem-url: https://demo.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
@@ -55,7 +54,6 @@ jobs:
 
       - uses: ./
         id: mcode-action
-        continue-on-error: true
         with:
           mayhem-url: https://demo.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
@@ -96,7 +94,6 @@ jobs:
 
       - uses: ./
         id: mcode-action
-        continue-on-error: true
         with:
           mayhem-url: https://demo.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
