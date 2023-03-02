@@ -42,8 +42,8 @@ jobs:
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
-          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
 
   test-all-outputs: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -83,8 +83,8 @@ jobs:
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
-          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
 
   test-no-outputs: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -104,5 +104,5 @@ jobs:
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
-          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
