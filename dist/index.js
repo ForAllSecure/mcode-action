@@ -140,16 +140,25 @@ function run() {
       mkdir -p ${coverageOutput};
     fi
 
-    # run mayhem
+    # Run mayhem
     run=$(${cli} --verbosity ${verbosity} run . \
                  --project ${repo.toLowerCase()} \
                  --owner ${account} ${argsString});
 
     # Persist the run id to the GitHub output
-    echo "runId=$run" >> $GITHUB_OUTPUT
+    echo "runId=$run" >> $GITHUB_OUTPUT;
 
-    if [ -z "$run" ]; then
-      exit 1
+    if [ -n "$run" ]; then
+      echo "Run $run succesfully scheduled.";
+    else
+      echo "Could not start run successfully, exiting with non-zero exit code.".
+      exit 1;
+    fi
+
+    # if the user didn't specify requiring any output, don't wait for the result.
+    if [ -z "${coverageOutput}"] && [ -z "${junitOutput}" ] && [ -z "${sarifOutput}" ]; then
+      echo "No coverage, junit or sarif output requested, not waiting for job result.";
+      exit 0;
     fi
 
     # run name is the last part of the run id
@@ -160,20 +169,18 @@ function run() {
             --owner ${account} \
             ${waitArgsString};
 
-    # check status, exit if failed
+    # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${verbosity} show \
                     --owner ${account} \
-                    --format json $run | jq '.[0].status')
+                    --format json $run | jq '.[0].status');
     if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
-      exit 2
+      exit 2;
     fi
 
-    # download coverage (owner flag doesn't work for download)
-    if ! [ -z "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput}
+    # download coverage (owner flag doesn't work for download, prepend instead)
+    if [ -n "${coverageOutput}" ]; then
+      ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput};
     fi
-
-    
     `;
             process.env["MAYHEM_TOKEN"] = mayhemToken;
             process.env["MAYHEM_URL"] = mayhemUrl;
