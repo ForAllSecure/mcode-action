@@ -1,0 +1,108 @@
+name: 'build-test'
+on:
+  push
+
+jobs:
+  build: # make sure build/ci work properly
+    runs-on: ubuntu-latest
+    env:
+      MAYHEM_TOKEN: ${{ secrets.MAYHEM_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+      - run: |
+          npm install
+      - run: |
+          npm run all
+
+  test-some-outputs: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+
+      - uses: ./
+        id: mcode-action
+        with:
+          mayhem-url: https://demo.forallsecure.com
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sarif-output: out/sarif/
+          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+          
+      - name: Upload SARIF file(s)
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: out/sarif
+
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
+        run: |
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+
+  test-all-outputs: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+
+      - uses: ./
+        id: mcode-action
+        with:
+          mayhem-url: https://demo.forallsecure.com
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          junit-output: out/junit/
+          sarif-output: out/sarif/
+          coverage-output: out/coverage/
+          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+
+      - name: Archive Coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: out/coverage/
+
+      - name: Archive JUnit results
+        uses: actions/upload-artifact@v3
+        with:
+          name: mcode-junit
+          path: out/junit/
+          
+      - name: Upload SARIF file(s)
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: out/sarif
+
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
+        run: |
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+
+  test-no-outputs: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+
+      - uses: ./
+        id: mcode-action
+        with:
+          mayhem-url: https://demo.forallsecure.com
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
+        run: |
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"

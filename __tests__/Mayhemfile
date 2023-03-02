@@ -1,0 +1,16 @@
+image: forallsecure/lighttpd:vulnerable        # fields are unnecessary
+duration: 60                                   # since they will
+project: forallsecure/lighttpd                 # be filled at
+target: lighttpd                               # run creation time
+advanced_triage: true
+tasks:
+  - name: exploitability_factors
+  - name: regression_testing
+  - name: behavior_testing
+  - name: coverage_analysis
+cmds:
+  - cmd: /usr/local/sbin/lighttpd -D -f /usr/local/etc/lighttpd.conf
+    network:
+      url: tcp://localhost:80
+      timeout: 2
+      client: false

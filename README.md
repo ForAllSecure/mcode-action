@@ -122,7 +122,26 @@ jobs:
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           args: --image ${{ needs.build.outputs.image }} --file ${{ matrix.mayhemfile }} --duration 300
           sarif-output: sarif
+          junit-output: junit
+          coverage-output: coverage
 
+      - name: Upload SARIF file(s)
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: sarif
+          
+      - name: Archive Coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage
+
+      - name: Archive JUnit results
+        uses: actions/upload-artifact@v3
+        with:
+          name: mcode-junit
+          path: junit
+          
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -137,6 +156,14 @@ The mCode Action accepts the following inputs:
 |   | `mayhem-token` | string | Mayhem for Code account token. **Only required within** `mayhem.yml` **if overriding** `mayhem-url`. |
 |   | `args` | string | Additional CLI override [arguments](https://mayhem.forallsecure.com/docs/mayhem-cli/getting-started/mayhem-cli-commands/#run) such as specifying the `--testsuite` directory path for a seed test suite. |
 |   | `sarif-output` | string | Path for generating a SARIF report output file. |
+|   | `junit-output` | string | Path for generating a jUnit report output file. |
+|   | `coverage-output` | string | Path for generating a coverage report output files. |
+
+The mCode Action provides the following outputs:
+| Output Name | Type | Description | Default
+| --- | --- | --- | ---
+| `runId` | string | The identifier of the run that this action triggered in Mayhem. |
+
 
 📖 See the [CI/CD](https://mayhem.forallsecure.com/docs/mayhem-ci-cd/fuzzing-in-your-pipeline/) docs for more information and guides on using the mCode GitHub Action!
 
@@ -146,14 +173,7 @@ Mayhem for Code generates [SARIF reports](https://sarifweb.azurewebsites.net/#:~
 
 SARIF reports are generated using the `sarif-output` parameter, which specifies an output file path.
 
-To upload the SARIF report to GitHub, use the `github/codeql-action/upload-sarif@v2` action with the `sarif_file` parameter to specify the location of a path containing SARIF results to upload to GitHub.
-
-```yaml
-- name: Upload SARIF file(s)
-  uses: github/codeql-action/upload-sarif@v2
-  with:
-    sarif_file: sarif
-```
+To upload the SARIF report to GitHub, see the `Upload SARIF file(s)` step in the `mayhem.yml` example above.
 
 Once uploaded to GitHub, you can view test results in the `Security` tab of your repository as well as for your individual pull requests.
 

@@ -31,8 +31,11 @@ async function run(): Promise<void> {
     });
     const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
     const sarifOutput: string = core.getInput("sarif-output") || "";
+    const junitOutput: string = core.getInput("junit-output") || "";
+    const coverageOutput: string = core.getInput("coverage-output") || "";
     const verbosity: string = core.getInput("verbosity") || "info";
     const args: string[] = (core.getInput("args") || "").split(" ");
+
     // defaults next
     if (!args.includes("--duration")) {
       args.push("--duration", "60");
@@ -71,30 +74,83 @@ async function run(): Promise<void> {
     args.push("--revision", revision);
 
     const argsString = args.join(" ");
-    // decide on the application type
+
+    // Generate arguments for wait command
+    // sarif, junit, coverage
+
+    const waitArgs = [];
+    if (sarifOutput) {
+      // $runName is a variable that is set in the bash script
+      waitArgs.push("--sarif", `${sarifOutput}/\${runName}.sarif`);
+    }
+    if (junitOutput) {
+      // $runName is a variable that is set in the bash script
+      waitArgs.push("--junit", `${junitOutput}/\${runName}.xml`);
+    }
+    if (coverageOutput) {
+      waitArgs.push("--coverage");
+    }
+
+    // create wait args string
+    const waitArgsString = waitArgs.join(" ");
 
     const script = `
     set -xe
+    # create sarif output directory
     if [ -n "${sarifOutput}" ]; then
       mkdir -p ${sarifOutput};
     fi
+
+    # create junit output directory
+    if [ -n "${junitOutput}" ]; then
+      mkdir -p ${junitOutput};
+    fi
+
+    # create coverage output directory
+    if [ -n "${coverageOutput}" ]; then
+      mkdir -p ${coverageOutput};
+    fi
+
+    # Run mayhem
     run=$(${cli} --verbosity ${verbosity} run . \
                  --project ${repo.toLowerCase()} \
                  --owner ${account} ${argsString});
-    if [ -z "$run" ]; then
-      exit 1
+
+    # Persist the run id to the GitHub output
+    echo "runId=$run" >> $GITHUB_OUTPUT;
+
+    if [ -n "$run" ]; then
+      echo "Run $run succesfully scheduled.";
+    else
+      echo "Could not start run successfully, exiting with non-zero exit code.".
+      exit 1;
     fi
-    if [ -n "${sarifOutput}" ]; then
-      sarifName="$(echo $run | awk -F / '{ print $(NF-1) }').sarif";
-      ${cli} --verbosity ${verbosity} wait $run \
-             --owner ${account} \
-             --sarif ${sarifOutput}/$sarifName;
-      status=$(${cli} --verbosity ${verbosity} show \
-                      --owner ${account} \
-                      --format json $run | jq '.[0].status')
-      if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
-        exit 2
-      fi
+
+    # if the user didn't specify requiring any output, don't wait for the result.
+    if [ -z "${coverageOutput}"] && [ -z "${junitOutput}" ] && [ -z "${sarifOutput}" ]; then
+      echo "No coverage, junit or sarif output requested, not waiting for job result.";
+      exit 0;
+    fi
+
+    # run name is the last part of the run id
+    runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
+    
+    # wait for run to finish
+    ${cli} --verbosity ${verbosity} wait $run \
+            --owner ${account} \
+            ${waitArgsString};
+
+    # check status, exit with non-zero status if failed or stopped
+    status=$(${cli} --verbosity ${verbosity} show \
+                    --owner ${account} \
+                    --format json $run | jq '.[0].status');
+    if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
+      exit 2;
+    fi
+
+    # download coverage (owner flag doesn't work for download, prepend instead)
+    if [ -n "${coverageOutput}" ]; then
+      ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput};
     fi
     `;
 
