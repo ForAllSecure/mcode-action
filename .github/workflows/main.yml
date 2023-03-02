@@ -18,7 +18,34 @@ jobs:
       - run: |
           npm run all
 
-  test: # make sure the action works on a clean machine without building
+  test-some-outputs: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+
+      - uses: ./
+        id: mcode-action
+        continue-on-error: true
+        with:
+          mayhem-url: https://demo.forallsecure.com
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          sarif-output: out/sarif/
+          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+          
+      - name: Upload SARIF file(s)
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: out/sarif
+
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }})
+        run: |
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+
+  test-all-outputs: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -54,6 +81,27 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: out/sarif
+
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }})
+        run: |
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+
+  test-no-outputs: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+
+      - uses: ./
+        id: mcode-action
+        continue-on-error: true
+        with:
+          mayhem-url: https://demo.forallsecure.com
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }})
         run: |
