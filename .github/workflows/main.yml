@@ -1,6 +1,11 @@
 name: 'build-test'
+
 on:
-  push
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build: # make sure build/ci work properly
