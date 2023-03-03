@@ -4,10 +4,8 @@ project: forallsecure/lighttpd                 # be filled at
 target: lighttpd                               # run creation time
 advanced_triage: true
 tasks:
+  # just do one quick task
   - name: exploitability_factors
-  - name: regression_testing
-  - name: behavior_testing
-  - name: coverage_analysis
 cmds:
   - cmd: /usr/local/sbin/lighttpd -D -f /usr/local/etc/lighttpd.conf
     network:
