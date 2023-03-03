@@ -34,6 +34,7 @@ async function run(): Promise<void> {
     const junitOutput: string = core.getInput("junit-output") || "";
     const coverageOutput: string = core.getInput("coverage-output") || "";
     const verbosity: string = core.getInput("verbosity") || "info";
+    const owner: string = core.getInput("owner").toLowerCase();
     const args: string[] = (core.getInput("args") || "").split(" ");
 
     // defaults next
@@ -44,15 +45,14 @@ async function run(): Promise<void> {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
 
-    // Auto-generate target name
     const repo = process.env["GITHUB_REPOSITORY"];
-    const account = repo?.split("/")[0].toLowerCase();
     if (repo === undefined) {
       throw Error(
         "Missing GITHUB_REPOSITORY environment variable. " +
           "Are you not running this in a Github Action environment?"
       );
     }
+
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
@@ -114,7 +114,7 @@ async function run(): Promise<void> {
     # Run mayhem
     run=$(${cli} --verbosity ${verbosity} run . \
                  --project ${repo.toLowerCase()} \
-                 --owner ${account} ${argsString});
+                 --owner ${owner} ${argsString});
 
     # Persist the run id to the GitHub output
     echo "runId=$run" >> $GITHUB_OUTPUT;
@@ -137,12 +137,12 @@ async function run(): Promise<void> {
     
     # wait for run to finish
     ${cli} --verbosity ${verbosity} wait $run \
-            --owner ${account} \
+            --owner ${owner} \
             ${waitArgsString};
 
     # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${verbosity} show \
-                    --owner ${account} \
+                    --owner ${owner} \
                     --format json $run | jq '.[0].status');
     if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
       exit 2;
@@ -150,7 +150,7 @@ async function run(): Promise<void> {
 
     # download coverage (owner flag doesn't work for download, prepend instead)
     if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download ${account}/$run -o ${coverageOutput};
+      ${cli} --verbosity ${verbosity} download ${owner}/$run -o ${coverageOutput};
     fi
     `;
 

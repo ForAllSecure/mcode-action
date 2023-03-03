@@ -8,6 +8,10 @@ inputs:
   mayhem-url:
     description: URL pointing to your Mayhem instance
     required: false
+  owner:
+    description: sets the owner of the project (organization or user).
+    required: false
+    default: ${{ github.repository_owner }}
   github-token:
     description: github token for posting feedback
     required: false
