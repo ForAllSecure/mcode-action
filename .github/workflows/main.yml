@@ -126,7 +126,7 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          mayhem-url: https://demo.forallsecure.com
+          mayhem-url: https://beta.forallsecure.com
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
