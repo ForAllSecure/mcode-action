@@ -1,21 +1,30 @@
-name: 'CI'
+name: Create Release with Changelog
 on:
   push:
-    tags:
-      - '*'
-
+    branches:
+      - main
 jobs:
-  release:
-    if: startsWith(github.ref, 'refs/tags/')
+  create_release:
+    name: Create Release with Changelog
     runs-on: ubuntu-latest
     steps:
-      - name: Build Changelog
-        id: github_release
-        uses: mikepenz/release-changelog-builder-action@v3
+      - uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+      - name: Install Dependencies
+        run: npm install
+      - name: Generate Changelog
+        id: changelog
+        run: npx conventional-changelog -p angular -i CHANGELOG.md -s -r 0
+      - name: Create Release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Release
-        uses: mikepenz/action-gh-release@v0.2.0-a03 #softprops/action-gh-release
         with:
-          body: ${{steps.github_release.outputs.changelog}}
+          tag_name: v${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.changelog.outputs.nextChangelog }}
+          draft: false
+          prerelease: false
