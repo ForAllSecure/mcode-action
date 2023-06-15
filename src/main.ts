@@ -4,7 +4,7 @@ import * as tc from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 
 const mayhemUrl: string =
-  core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
+  core.getInput("mayhem-url") || "https://app.mayhem.security";
 
 /** Return local path to donwloaded or cached CLI */
 async function mcodeCLI(): Promise<string> {
