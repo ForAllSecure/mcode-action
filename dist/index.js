@@ -43,7 +43,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const tc = __importStar(__nccwpck_require__(7784));
 const fs_1 = __nccwpck_require__(7147);
-const mayhemUrl = core.getInput("mayhem-url") || "https://mayhem.forallsecure.com";
+const mayhemUrl = core.getInput("mayhem-url") || "https://app.mayhem.security";
 /** Return local path to donwloaded or cached CLI */
 function mcodeCLI() {
     return __awaiter(this, void 0, void 0, function* () {
