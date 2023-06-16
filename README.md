@@ -12,7 +12,7 @@ A GitHub Action for using Mayhem for Code to check for reliability, performance 
 
 🤖 Simple to Automate in CI: Tests belong in CI, running on every commit and PRs. We make it easy, and provide results right in your PRs where you want them. Adding Mayhem for Code to a DevOps pipeline is easy.
 
-Want to try it? [Get started for free](https://forallsecure.com/mayhem-free) today!
+Want to try it? [Get started for free](https://www.mayhem.security/get-started) today!
 
 ## Getting Started
 
@@ -195,6 +195,6 @@ Finally, push your changes and submit a pull request from your forked repository
 
 ForAllSecure was founded with the mission to make the world’s critical software safe. The company has been applying its patented technology from over a decade of CMU research to solving the difficult challenge of making software safer. ForAllSecure has partnered with Fortune 1000 companies in aerospace, automotive and high-tech industries, as well as the US Department of Defense to integrate Mayhem into software development cycles for continuous security. Profitable and revenue-funded, the company is scaling rapidly.
 
-* [https://forallsecure.com/](https://forallsecure.com/)
-* [https://forallsecure.com/mayhem-for-code](https://forallsecure.com/mayhem-for-code)
+* [https://mayhem.security/](https://mayhem.security/)
+* [https://www.mayhem.security/code-security](https://www.mayhem.security/code-security)
 * [https://community.forallsecure.com/](https://community.forallsecure.com/)
