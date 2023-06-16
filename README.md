@@ -21,8 +21,8 @@ To use the Mayhem for Code GitHub Action, perform the following steps:
 1. Navigate to [app.mayhem.security](https://app.mayhem.security/) to register an account.
 
     1. After logging in, on the bottom left:
-       1. click your profile icon.
-       2. click Account Settings.
+       1. Click your profile icon.
+       2. Click Account Settings.
     2. Switch to *API Tokens* section to access your account API token.
 
     3. Copy and paste your Mayhem token to your repo's [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-organization). You will need the following secrets configured for your repository:
