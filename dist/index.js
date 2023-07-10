@@ -72,6 +72,7 @@ function run() {
             const sarifOutput = core.getInput("sarif-output") || "";
             const junitOutput = core.getInput("junit-output") || "";
             const coverageOutput = core.getInput("coverage-output") || "";
+            const failOnDefects = core.getBooleanInput("fail-on-defects") || false;
             const verbosity = core.getInput("verbosity") || "info";
             const owner = core.getInput("owner").toLowerCase();
             const args = (core.getInput("args") || "").split(" ");
@@ -120,6 +121,9 @@ function run() {
             if (coverageOutput) {
                 waitArgs.push("--coverage");
             }
+            if (failOnDefects) {
+                waitArgs.push("--fail-on-defects");
+            }
             // create wait args string
             const waitArgsString = waitArgs.join(" ");
             const script = `
@@ -164,9 +168,11 @@ function run() {
     runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
     
     # wait for run to finish
-    ${cli} --verbosity ${verbosity} wait $run \
+    if ! ${cli} --verbosity ${verbosity} wait $run \
             --owner ${owner} \
-            ${waitArgsString};
+            ${waitArgsString}; then
+      exit 3;
+    fi
 
     # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${verbosity} show \
@@ -199,6 +205,9 @@ function run() {
             else if (res == 2) {
                 throw new Error("The Mayhem for Code scan detected the Mayhem run for your " +
                     "target was unsuccessful.");
+            }
+            else if (res == 3) {
+                throw new Error("The Mayhem for Code scan found defects in your target.");
             }
         }
         catch (err) {

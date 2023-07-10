@@ -25,6 +25,9 @@ inputs:
   coverage-output:
     description: coverage report output path (must be a directory, doesn't have to exist yet). You can upload the artifacts to GitHub using the 'actions/upload-artifact' action
     required: false
+  fail-on-defects:
+    description: should we fail the workflow upon detecting a defect?
+    required: false
   verbosity:
     description: verbosity level for starting runs
     required: false

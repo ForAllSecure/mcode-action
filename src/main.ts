@@ -33,6 +33,7 @@ async function run(): Promise<void> {
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const junitOutput: string = core.getInput("junit-output") || "";
     const coverageOutput: string = core.getInput("coverage-output") || "";
+    const failOnDefects: boolean = core.getBooleanInput("fail-on-defects") || false;
     const verbosity: string = core.getInput("verbosity") || "info";
     const owner: string = core.getInput("owner").toLowerCase();
     const args: string[] = (core.getInput("args") || "").split(" ");
@@ -90,6 +91,9 @@ async function run(): Promise<void> {
     if (coverageOutput) {
       waitArgs.push("--coverage");
     }
+    if (failOnDefects) {
+      waitArgs.push("--fail-on-defects");
+    }
 
     // create wait args string
     const waitArgsString = waitArgs.join(" ");
@@ -136,9 +140,11 @@ async function run(): Promise<void> {
     runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
     
     # wait for run to finish
-    ${cli} --verbosity ${verbosity} wait $run \
+    if ! ${cli} --verbosity ${verbosity} wait $run \
             --owner ${owner} \
-            ${waitArgsString};
+            ${waitArgsString}; then
+      exit 3;
+    fi
 
     # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${verbosity} show \
@@ -173,6 +179,10 @@ async function run(): Promise<void> {
       throw new Error(
         "The Mayhem for Code scan detected the Mayhem run for your " +
           "target was unsuccessful."
+      );
+    } else if (res == 3) {
+      throw new Error(
+        "The Mayhem for Code scan found defects in your target."
       );
     }
   } catch (err: unknown) {
