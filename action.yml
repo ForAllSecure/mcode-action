@@ -28,6 +28,7 @@ inputs:
   fail-on-defects:
     description: should we fail the workflow upon detecting a defect?
     required: false
+    default: "false"
   verbosity:
     description: verbosity level for starting runs
     required: false

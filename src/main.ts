@@ -33,7 +33,8 @@ async function run(): Promise<void> {
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const junitOutput: string = core.getInput("junit-output") || "";
     const coverageOutput: string = core.getInput("coverage-output") || "";
-    const failOnDefects: boolean = core.getBooleanInput("fail-on-defects") || false;
+    const failOnDefects: boolean =
+      core.getBooleanInput("fail-on-defects") || false;
     const verbosity: string = core.getInput("verbosity") || "info";
     const owner: string = core.getInput("owner").toLowerCase();
     const args: string[] = (core.getInput("args") || "").split(" ");
@@ -181,9 +182,7 @@ async function run(): Promise<void> {
           "target was unsuccessful."
       );
     } else if (res == 3) {
-      throw new Error(
-        "The Mayhem for Code scan found defects in your target."
-      );
+      throw new Error("The Mayhem for Code scan found defects in your target.");
     }
   } catch (err: unknown) {
     if (err instanceof Error) {

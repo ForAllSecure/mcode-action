@@ -19,6 +19,7 @@ test("test runs", () => {
   process.env["INPUT_JUNIT-OUTPUT"] = "junit-output";
   process.env["INPUT_SARIF-OUTPUT"] = "sarif-output";
   process.env["INPUT_COVERAGE-OUTPUT"] = "coverage-output";
+  process.env["INPUT_FAIL-ON-DEFECTS"] = "false";
 
   const np = process.execPath;
   const ip = path.join(__dirname, "..", "lib", "main.js");
