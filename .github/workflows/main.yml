@@ -1,4 +1,4 @@
-name: 'build-test'
+name: "build-test"
 
 on:
   push:
@@ -7,8 +7,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+
 jobs:
-  build: # make sure build/ci work properly
+  build:
+    # make sure build/ci work properly
     runs-on: ubuntu-latest
     env:
       MAYHEM_TOKEN: ${{ secrets.MAYHEM_TOKEN }}
@@ -23,7 +25,8 @@ jobs:
       - run: |
           npm run all
 
-  test-some-outputs: # make sure the action works on a clean machine without building
+  test-some-outputs:
+    # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,12 +37,13 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
+          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           sarif-output: out/sarif/
           args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
-          
+
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -50,7 +54,8 @@ jobs:
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
 
-  test-all-outputs: # make sure the action works on a clean machine without building
+  test-all-outputs:
+    # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -61,6 +66,7 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
+          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -82,7 +88,7 @@ jobs:
           name: mcode-junit
           path: out/junit/
           if-no-files-found: error
-          
+
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -93,7 +99,8 @@ jobs:
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
 
-  test-no-outputs: # make sure the action works on a clean machine without building
+  test-no-outputs:
+    # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -104,6 +111,7 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
+          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -131,8 +139,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
           # override the default owner which is forallsecure
-          # the secrets.MAYHEM_TOKEN is this case is owned by vlussenburg, which is why we choose that owner here
-          owner: vlussenburg
+          # the secrets.MAYHEM_TOKEN is this case is owned by mcode-action, which is why we choose that owner here
+          owner: mcode-action
           # override default verbosity which is info (contrary to what the `action.yml` says: https://github.com/ForAllSecure/mcode-action/blob/806778bb4a79d793f678087d0f9f3ff18f9a2d93/src/main.ts#L36)
           verbosity: debug
           # already covered and skipped in this test: mayhem-token, mayhem-url, github-token, sarif|junit|coverage-output, args
