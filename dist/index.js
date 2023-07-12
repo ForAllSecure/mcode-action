@@ -159,7 +159,10 @@ function run() {
     fi
 
     # if the user didn't specify requiring any output, don't wait for the result.
-    if [ -z "${coverageOutput}" ] && [ -z "${junitOutput}" ] && [ -z "${sarifOutput}" ]; then
+    if [ -z "${coverageOutput}" ] && \
+        [ -z "${junitOutput}" ] && \
+        [ -z "${sarifOutput}" ] && \
+        [ "${failOnDefects.toString().toLowerCase()}" != "true" ]; then
       echo "No coverage, junit or sarif output requested, not waiting for job result.";
       exit 0;
     fi

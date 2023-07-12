@@ -36,7 +36,6 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -65,7 +64,6 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -110,7 +108,6 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +159,6 @@ jobs:
         id: mcode-action
         continue-on-error: true
         with:
-          owner: forallsecure
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
