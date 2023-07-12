@@ -2,11 +2,10 @@ name: "build-test"
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
-
 
 jobs:
   build:
@@ -41,7 +40,8 @@ jobs:
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           sarif-output: out/sarif/
-          args: --image forallsecure/lighttpd:vulnerable --duration 60 __tests__/lighttpd
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
@@ -71,7 +71,8 @@ jobs:
           junit-output: out/junit/
           sarif-output: out/sarif/
           coverage-output: out/coverage/
-          args: --image forallsecure/lighttpd:vulnerable --duration 60 __tests__/lighttpd
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Archive Coverage report
         uses: actions/upload-artifact@v3
@@ -112,7 +113,8 @@ jobs:
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --image forallsecure/lighttpd:vulnerable --duration 60 __tests__/lighttpd
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
@@ -134,7 +136,8 @@ jobs:
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --image forallsecure/lighttpd:vulnerable --duration 60 __tests__/lighttpd
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
           # override the default owner which is forallsecure
           # the secrets.MAYHEM_TOKEN is this case is owned by mcode-action, which is why we choose that owner here
           owner: mcode-action
@@ -163,7 +166,8 @@ jobs:
           mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --image forallsecure/c-base-executable:latest --duration 60 __tests__/mayhemit
+          package: __tests__/mayhemit
+          args: --image forallsecure/c-base-executable:latest --duration 60
           fail-on-defects: true
 
       # Previous step should fail

@@ -69,6 +69,7 @@ function run() {
                 required: true,
             });
             const mayhemToken = core.getInput("mayhem-token") || githubToken;
+            const packagePath = core.getInput("package") || ".";
             const sarifOutput = core.getInput("sarif-output") || "";
             const junitOutput = core.getInput("junit-output") || "";
             const coverageOutput = core.getInput("coverage-output") || "";
@@ -144,7 +145,7 @@ function run() {
     fi
 
     # Run mayhem
-    run=$(${cli} --verbosity ${verbosity} run . \
+    run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
                  --project ${repo.toLowerCase()} \
                  --owner ${owner} ${argsString});
 

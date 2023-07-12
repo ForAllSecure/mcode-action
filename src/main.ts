@@ -30,6 +30,7 @@ async function run(): Promise<void> {
       required: true,
     });
     const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
+    const packagePath: string = core.getInput("package") || ".";
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const junitOutput: string = core.getInput("junit-output") || "";
     const coverageOutput: string = core.getInput("coverage-output") || "";
@@ -117,7 +118,7 @@ async function run(): Promise<void> {
     fi
 
     # Run mayhem
-    run=$(${cli} --verbosity ${verbosity} run . \
+    run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
                  --project ${repo.toLowerCase()} \
                  --owner ${owner} ${argsString});
 
