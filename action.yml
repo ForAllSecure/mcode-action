@@ -32,6 +32,10 @@ inputs:
   verbosity:
     description: verbosity level for starting runs
     required: false
+  package:
+    description: Path to the Mayhem package relative to the repository root
+    required: false
+    default: "."
   args:
     description: command line arguments to override CLI behavior
     required: false

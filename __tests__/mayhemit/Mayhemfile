@@ -1,0 +1,9 @@
+image: forallsecure/c-base-executable          # fields are unnecessary
+duration: 60                                   # since they will
+project: forallsecure/mayhemit                 # be filled at
+target: mayhemit                               # run creation time
+tasks:
+  # just do one quick task
+  - name: regression_testing
+cmds:
+  - cmd: /mayhemit @@

@@ -30,6 +30,7 @@ async function run(): Promise<void> {
       required: true,
     });
     const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
+    const packagePath: string = core.getInput("package") || ".";
     const sarifOutput: string = core.getInput("sarif-output") || "";
     const junitOutput: string = core.getInput("junit-output") || "";
     const coverageOutput: string = core.getInput("coverage-output") || "";
@@ -117,7 +118,7 @@ async function run(): Promise<void> {
     fi
 
     # Run mayhem
-    run=$(${cli} --verbosity ${verbosity} run . \
+    run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
                  --project ${repo.toLowerCase()} \
                  --owner ${owner} ${argsString});
 
@@ -132,7 +133,10 @@ async function run(): Promise<void> {
     fi
 
     # if the user didn't specify requiring any output, don't wait for the result.
-    if [ -z "${coverageOutput}" ] && [ -z "${junitOutput}" ] && [ -z "${sarifOutput}" ]; then
+    if [ -z "${coverageOutput}" ] && \
+        [ -z "${junitOutput}" ] && \
+        [ -z "${sarifOutput}" ] && \
+        [ "${failOnDefects.toString().toLowerCase()}" != "true" ]; then
       echo "No coverage, junit or sarif output requested, not waiting for job result.";
       exit 0;
     fi

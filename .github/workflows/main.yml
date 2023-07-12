@@ -1,14 +1,15 @@
-name: 'build-test'
+name: "build-test"
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  build: # make sure build/ci work properly
+  build:
+    # make sure build/ci work properly
     runs-on: ubuntu-latest
     env:
       MAYHEM_TOKEN: ${{ secrets.MAYHEM_TOKEN }}
@@ -23,7 +24,8 @@ jobs:
       - run: |
           npm run all
 
-  test-some-outputs: # make sure the action works on a clean machine without building
+  test-some-outputs:
+    # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,12 +36,13 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          mayhem-url: https://beta.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           sarif-output: out/sarif/
-          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
-          
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
+
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -50,7 +53,8 @@ jobs:
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
 
-  test-all-outputs: # make sure the action works on a clean machine without building
+  test-all-outputs:
+    # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -61,13 +65,14 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          mayhem-url: https://beta.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           junit-output: out/junit/
           sarif-output: out/sarif/
           coverage-output: out/coverage/
-          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Archive Coverage report
         uses: actions/upload-artifact@v3
@@ -82,7 +87,7 @@ jobs:
           name: mcode-junit
           path: out/junit/
           if-no-files-found: error
-          
+
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -93,7 +98,8 @@ jobs:
           [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
           echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
 
-  test-no-outputs: # make sure the action works on a clean machine without building
+  test-no-outputs:
+    # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -104,10 +110,11 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          mayhem-url: https://beta.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
@@ -126,16 +133,46 @@ jobs:
       - uses: ./
         id: mcode-action
         with:
-          mayhem-url: https://beta.forallsecure.com
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          args: --image forallsecure/lighttpd:vulnerable --file __tests__/Mayhemfile --duration 60
+          package: __tests__/lighttpd
+          args: --image forallsecure/lighttpd:vulnerable --duration 60
           # override the default owner which is forallsecure
-          # the secrets.MAYHEM_TOKEN is this case is owned by vlussenburg, which is why we choose that owner here
-          owner: vlussenburg
+          # the secrets.MAYHEM_TOKEN is this case is owned by mcode-action, which is why we choose that owner here
+          owner: mcode-action
           # override default verbosity which is info (contrary to what the `action.yml` says: https://github.com/ForAllSecure/mcode-action/blob/806778bb4a79d793f678087d0f9f3ff18f9a2d93/src/main.ts#L36)
           verbosity: debug
           # already covered and skipped in this test: mayhem-token, mayhem-url, github-token, sarif|junit|coverage-output, args
+
+      - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
+        run: |
+          [ -z "${{ steps.mcode-action.outputs.runId }}" ] && echo "runId was blank!" && exit 1;
+          echo "The run id was: ${{ steps.mcode-action.outputs.runId }}"
+
+  test-fail-on-defects:
+    # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # fetch entire history to compute diffs between jobs
+          fetch-depth: 0
+
+      - uses: ./
+        id: mcode-action
+        continue-on-error: true
+        with:
+          mayhem-url: ${{ secrets.MAYHEM_URL }}
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          package: __tests__/mayhemit
+          args: --image forallsecure/c-base-executable:latest --duration 60
+          fail-on-defects: true
+
+      # Previous step should fail
+      - name: Invert success and failure
+        run: if [[ ${{ steps.mcode-action.outcome }} == "failure" ]]; then exit 0; else exit 1; fi
 
       - name: Print runId (${{ steps.mcode-action.outputs.runId }}) and test it's non-empty
         run: |
