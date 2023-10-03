@@ -1,5 +1,5 @@
 name: "Mayhem for Code"
-description: "Automatically test your Rust targets with Mayhem"
+description: "Automatically test your binary targets with Mayhem"
 author: "ForAllSecure"
 inputs:
   mayhem-token:
@@ -9,35 +9,38 @@ inputs:
     description: URL pointing to your Mayhem instance
     required: false
   owner:
-    description: sets the owner of the project (organization or user).
+    description: Sets the owner of the project (workspace or account name).
     required: false
     default: ${{ github.repository_owner }}
+  project:
+    description: Sets the name of the project. Defaults to the name of your repository if not defined.
+    required: false
   github-token:
-    description: github token for posting feedback
+    description: GitHub token for posting feedback
     required: false
     default: ${{ github.token }}
   sarif-output:
     description: SARIF output path (must be a directory, doesn't have to exist yet). You can upload to to GitHub using the 'github/codeql-action/upload-sarif@v1' action
     required: false
   junit-output:
-    description: jUnit output path (must be a directory, doesn't have to exist yet). You can upload the artifact to GitHub using the 'actions/upload-artifact' action
+    description: JUnit output path (must be a directory, doesn't have to exist yet). You can upload the artifact to GitHub using the 'actions/upload-artifact' action
     required: false
   coverage-output:
-    description: coverage report output path (must be a directory, doesn't have to exist yet). You can upload the artifacts to GitHub using the 'actions/upload-artifact' action
+    description: Coverage report output path (must be a directory, doesn't have to exist yet). You can upload the artifacts to GitHub using the 'actions/upload-artifact' action
     required: false
   fail-on-defects:
-    description: should we fail the workflow upon detecting a defect?
+    description: Should we fail the workflow upon detecting a defect?
     required: false
     default: "false"
   verbosity:
-    description: verbosity level for starting runs
+    description: Verbosity level for starting runs
     required: false
   package:
     description: Path to the Mayhem package relative to the repository root
     required: false
     default: "."
   args:
-    description: command line arguments to override CLI behavior
+    description: Command line arguments to override CLI behavior
     required: false
 runs:
   using: "node16"
