@@ -89,6 +89,7 @@ function run() {
                 throw Error("Missing GITHUB_REPOSITORY environment variable. " +
                     "Are you not running this in a Github Action environment?");
             }
+            const project = (core.getInput("project") || repo).toLowerCase();
             const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
             const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
             const eventPullRequest = event.pull_request;
@@ -146,7 +147,7 @@ function run() {
 
     # Run mayhem
     run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
-                 --project ${repo.toLowerCase()} \
+                 --project ${project} \
                  --owner ${owner} ${argsString});
 
     # Persist the run id to the GitHub output
@@ -170,7 +171,7 @@ function run() {
 
     # run name is the last part of the run id
     runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
-    
+
     # wait for run to finish
     if ! ${cli} --verbosity ${verbosity} wait $run \
             --owner ${owner} \

@@ -131,7 +131,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: sarif
-          
+
       - name: Archive Coverage report
         uses: actions/upload-artifact@v3
         with:
@@ -143,7 +143,7 @@ jobs:
         with:
           name: mcode-junit
           path: junit
-          
+
       - name: Upload SARIF file(s)
         uses: github/codeql-action/upload-sarif@v2
         with:
@@ -160,6 +160,8 @@ The mCode Action accepts the following inputs:
 |   | `sarif-output` | string | Path for generating a SARIF report output file. |
 |   | `junit-output` | string | Path for generating a jUnit report output file. |
 |   | `coverage-output` | string | Path for generating a coverage report output files. |
+|   | `owner` | string | The workspace for the run. |
+|   | `project` | string | The name of the project  |  Defaults to the name of your repository if not defined. |
 
 The mCode Action provides the following outputs:
 | Output Name | Type | Description | Default

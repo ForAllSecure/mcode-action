@@ -56,6 +56,7 @@ async function run(): Promise<void> {
       );
     }
 
+    const project: string = (core.getInput("project") || repo).toLowerCase();
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
@@ -119,7 +120,7 @@ async function run(): Promise<void> {
 
     # Run mayhem
     run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
-                 --project ${repo.toLowerCase()} \
+                 --project ${project} \
                  --owner ${owner} ${argsString});
 
     # Persist the run id to the GitHub output
@@ -143,7 +144,7 @@ async function run(): Promise<void> {
 
     # run name is the last part of the run id
     runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
-    
+
     # wait for run to finish
     if ! ${cli} --verbosity ${verbosity} wait $run \
             --owner ${owner} \
