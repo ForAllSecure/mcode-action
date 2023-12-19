@@ -160,7 +160,6 @@ async function run(): Promise<void> {
       exit 2;
     fi
 
-    # download coverage (owner flag doesn't work for download, prepend instead)
     if [ -n "${coverageOutput}" ]; then
       ${cli} --verbosity ${verbosity} download  --owner ${owner} $run -o ${coverageOutput};
     fi

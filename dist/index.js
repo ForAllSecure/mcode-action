@@ -189,7 +189,7 @@ function run() {
 
     # download coverage (owner flag doesn't work for download, prepend instead)
     if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download ${owner}/$run -o ${coverageOutput};
+      ${cli} --verbosity ${verbosity} download  --owner ${owner} $run -o ${coverageOutput};
     fi
     `;
             process.env["MAYHEM_TOKEN"] = mayhemToken;
