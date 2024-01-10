@@ -151,7 +151,8 @@ async function run(): Promise<void> {
             ${waitArgsString}; then
       exit 3;
     fi
-
+    
+    
     # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${verbosity} show \
                     --owner ${owner} \
@@ -160,9 +161,10 @@ async function run(): Promise<void> {
       exit 2;
     fi
 
-    # download coverage (owner flag doesn't work for download, prepend instead)
+    target=$(echo $run | cut -d'/' -f2)
+
     if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download ${owner}/$run -o ${coverageOutput};
+      ${cli} --verbosity ${verbosity} download  --owner ${owner} ${project}/$target -o ${coverageOutput};
     fi
     `;
 
