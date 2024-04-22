@@ -43,7 +43,7 @@ inputs:
     description: Command line arguments to override CLI behavior
     required: false
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/index.js"
 outputs:
   runId:
