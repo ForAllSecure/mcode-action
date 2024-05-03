@@ -15,7 +15,7 @@ jobs:
       MAYHEM_TOKEN: ${{ secrets.MAYHEM_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # fetch entire history to compute diffs between jobs
           fetch-depth: 0
@@ -28,7 +28,7 @@ jobs:
     # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # fetch entire history to compute diffs between jobs
           fetch-depth: 0
@@ -57,7 +57,7 @@ jobs:
     # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # fetch entire history to compute diffs between jobs
           fetch-depth: 0
@@ -75,21 +75,21 @@ jobs:
           args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Archive Coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: out/coverage/
           if-no-files-found: error
 
       - name: Archive JUnit results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mcode-junit
           path: out/junit/
           if-no-files-found: error
 
       - name: Upload SARIF file(s)
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: out/sarif
 
@@ -102,7 +102,7 @@ jobs:
     # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # fetch entire history to compute diffs between jobs
           fetch-depth: 0
@@ -125,7 +125,7 @@ jobs:
   test-override-inputs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # fetch entire history to compute diffs between jobs
           fetch-depth: 0
@@ -154,7 +154,7 @@ jobs:
     # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # fetch entire history to compute diffs between jobs
           fetch-depth: 0
