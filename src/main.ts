@@ -83,6 +83,7 @@ async function run(): Promise<void> {
     // sarif, junit, coverage
 
     const waitArgs = [];
+    waitArgs.push("--verbose");
     if (sarifOutput) {
       // $runName is a variable that is set in the bash script
       waitArgs.push("--sarif", `${sarifOutput}/\${runName}.sarif`);
