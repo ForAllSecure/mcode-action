@@ -4,8 +4,7 @@ project: forallsecure/lighttpd                 # be filled at
 target: lighttpd                               # run creation time
 advanced_triage: true
 tasks:
-  # just do one quick task
-  - name: exploitability_factors
+  - name: exploitability_factors               # just do one quick task
 cmds:
   - cmd: /usr/local/sbin/lighttpd -D -f /usr/local/etc/lighttpd.conf
     network:
