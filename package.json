@@ -1,6 +1,6 @@
 {
   "name": "mcode-action",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "private": true,
   "description": "Mayhem for Code action",
   "main": "lib/main.js",
