@@ -52,7 +52,7 @@ async function run(): Promise<void> {
     if (repo === undefined) {
       throw Error(
         "Missing GITHUB_REPOSITORY environment variable. " +
-          "Are you not running this in a Github Action environment?"
+          "Are you not running this in a Github Action environment?",
       );
     }
 
@@ -186,7 +186,7 @@ async function run(): Promise<void> {
     } else if (res == 2) {
       throw new Error(
         "The Mayhem for Code scan detected the Mayhem run for your " +
-          "target was unsuccessful."
+          "target was unsuccessful.",
       );
     } else if (res == 3) {
       throw new Error("The Mayhem for Code scan found defects in your target.");
