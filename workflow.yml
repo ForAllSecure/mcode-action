@@ -22,7 +22,7 @@ jobs:
   mayhem-for-code:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       # Build your target so that mayhem is ready to run them
       - name: Build your target
@@ -39,6 +39,6 @@ jobs:
       # enterprise). If you cannot use this action, other report format are
       # available (HTML, JUnit)
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: sarif

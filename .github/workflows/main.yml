@@ -44,7 +44,7 @@ jobs:
           args: --image forallsecure/lighttpd:vulnerable --duration 60
 
       - name: Upload SARIF file(s)
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: out/sarif
 
