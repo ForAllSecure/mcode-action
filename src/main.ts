@@ -161,10 +161,11 @@ async function run(): Promise<void> {
       exit 2;
     fi
 
-    target=$(echo $run | cut -d'/' -f2)
+    # Strip the run number from the full run path to get the project/target.
+    target=$(echo $run | sed 's:/[^/]*$::')
 
     if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download  --owner ${owner} ${project}/$target -o ${coverageOutput};
+      ${cli} --verbosity ${verbosity} download --owner ${owner} $target -o ${coverageOutput};
     fi
     `;
 
