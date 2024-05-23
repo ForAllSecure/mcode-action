@@ -191,7 +191,7 @@ function run() {
     target=$(echo $run | cut -d'/' -f2)
 
     if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download  --owner ${owner} ${project}/$target -o ${coverageOutput};
+      ${cli} --verbosity ${verbosity} download --owner ${owner} $target -o ${coverageOutput};
     fi
     `;
             process.env["MAYHEM_TOKEN"] = mayhemToken;
