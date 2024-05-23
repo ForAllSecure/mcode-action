@@ -4,5 +4,5 @@
 .PHONY: dist-rebuild
 dist-rebuild:
 	docker build -t dist-builder .
-	docker run -u $(shell id -u):$(shell id -g) --rm -v $(shell pwd):/out dist-builder cp -rv /workdir/dist/. /out/dist""
+	docker run -u $(shell id -u):$(shell id -g) --rm -v $(shell pwd):/out dist-builder cp -rv /workdir/dist/. /out/dist
 	docker rmi -f dist-builder

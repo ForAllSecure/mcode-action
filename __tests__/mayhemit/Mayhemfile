@@ -3,7 +3,6 @@ duration: 60                                   # since they will
 project: forallsecure/mayhemit                 # be filled at
 target: mayhemit                               # run creation time
 tasks:
-  # just do one quick task
-  - name: regression_testing
+  - name: regression_testing                   # just do one quick task
 cmds:
   - cmd: /mayhemit @@

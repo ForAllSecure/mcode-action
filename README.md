@@ -69,7 +69,7 @@ jobs:
             triplet: x64-linux
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -115,7 +115,7 @@ jobs:
           # Specify one or many Mayhemfiles here
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Start analysis for ${{ matrix.mayhemfile }}
         uses: ForAllSecure/mcode-action@v1
@@ -128,24 +128,24 @@ jobs:
           coverage-output: coverage
 
       - name: Upload SARIF file(s)
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: sarif
 
       - name: Archive Coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
 
       - name: Archive JUnit results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mcode-junit
           path: junit
 
       - name: Upload SARIF file(s)
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: sarif
 ```
