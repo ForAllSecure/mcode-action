@@ -1,18 +1,54 @@
 {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint",
+        "jest",
+        "prettier"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:github/recommended",
+        "plugin:jest/recommended"
+    ],
     "env": {
         "browser": true,
-        "es2021": true
+        "es6": true,
+        "node": true,
+        "jest": true
     },
-    "extends": [
-        "google", "prettier"
-    ],
-    "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": 13,
-        "sourceType": "module"
+        "ecmaVersion": 2023,
+        "sourceType": "module",
+        "project": "./tsconfig.json"
     },
-    "plugins": ["@typescript-eslint", "prettier"],
     "rules": {
-        "prettier/prettier": "error"
+        // Error for any prettier formatting issues.
+        "prettier/prettier": "error",
+        // Error for any if blocks without curly braces.
+        "curly": "error",
+        // Error if unused vars or args are present that dont begin with an underscore.
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_"
+            }
+        ],
+        "no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_"
+            }
+        ],
+        // Error if any unused expressions are present.
+        "no-unused-expressions": "error",
+        // Be explicit about parsing numbers.
+        "radix": "error",
+        // Disable broken eslint no-shadow rule for TypeScript enums.
+        "no-shadow": "off",
+        "@typescript-eslint/no-shadow": "error"
     }
 }
