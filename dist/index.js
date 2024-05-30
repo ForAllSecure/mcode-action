@@ -6,29 +6,6 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -39,22 +16,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const exec = __importStar(__nccwpck_require__(1514));
-const tc = __importStar(__nccwpck_require__(7784));
+const core_1 = __nccwpck_require__(2186);
+const exec_1 = __nccwpck_require__(1514);
+const tool_cache_1 = __nccwpck_require__(7784);
 const fs_1 = __nccwpck_require__(7147);
-const mayhemUrl = core.getInput("mayhem-url") || "https://app.mayhem.security";
-/** Return local path to donwloaded or cached CLI */
-function mcodeCLI() {
+const mayhemUrl = (0, core_1.getInput)("mayhem-url") || "https://app.mayhem.security";
+/**
+ * Operating systems that an mCode CLI is available for, mapped to the URL path it can be
+ * downloaded from on a recent Mayhem cluster.
+ */
+var CliOsPath;
+(function (CliOsPath) {
+    CliOsPath["Linux"] = "Linux/mayhem";
+    CliOsPath["MacOS"] = "Darwin/mayhem.pkg";
+    CliOsPath["Windows"] = "Windows/mayhem.exe";
+})(CliOsPath || (CliOsPath = {}));
+/**
+ * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
+ * path to the downloaded CLI.
+ * @param url the base URL of the Mayhem cluster, such as "https://app.mayhem.security".
+ * @param os the operating system to download the CLI for.
+ * @return Path to the downloaded mCode CLI; resolves when the CLI download is complete.
+ */
+function downloadCli(url, os) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Get latest version from API
-        const os = "Linux";
-        const bin = "mayhem";
-        // Download the CLI and cache it if version is set
-        const mcodePath = yield tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
+        // Download the CLI and mark it as executable.
+        const mcodePath = yield (0, tool_cache_1.downloadTool)(`${url}/cli/${os}`);
         (0, fs_1.chmodSync)(mcodePath, 0o755);
-        // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
-        // return `${folder}/${bin}`;
         return mcodePath;
     });
 }
@@ -63,20 +51,20 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
-            const cli = yield mcodeCLI();
+            const cli = yield downloadCli(mayhemUrl, CliOsPath.Linux);
             // Load inputs
-            const githubToken = core.getInput("github-token", {
+            const githubToken = (0, core_1.getInput)("github-token", {
                 required: true,
             });
-            const mayhemToken = core.getInput("mayhem-token") || githubToken;
-            const packagePath = core.getInput("package") || ".";
-            const sarifOutput = core.getInput("sarif-output") || "";
-            const junitOutput = core.getInput("junit-output") || "";
-            const coverageOutput = core.getInput("coverage-output") || "";
-            const failOnDefects = core.getBooleanInput("fail-on-defects") || false;
-            const verbosity = core.getInput("verbosity") || "info";
-            const owner = core.getInput("owner").toLowerCase();
-            const args = (core.getInput("args") || "").split(" ");
+            const mayhemToken = (0, core_1.getInput)("mayhem-token") || githubToken;
+            const packagePath = (0, core_1.getInput)("package") || ".";
+            const sarifOutput = (0, core_1.getInput)("sarif-output") || "";
+            const junitOutput = (0, core_1.getInput)("junit-output") || "";
+            const coverageOutput = (0, core_1.getInput)("coverage-output") || "";
+            const failOnDefects = (0, core_1.getBooleanInput)("fail-on-defects") || false;
+            const verbosity = (0, core_1.getInput)("verbosity") || "info";
+            const owner = (0, core_1.getInput)("owner").toLowerCase();
+            const args = ((0, core_1.getInput)("args") || "").split(" ");
             // defaults next
             if (!args.includes("--duration")) {
                 args.push("--duration", "60");
@@ -89,7 +77,7 @@ function run() {
                 throw Error("Missing GITHUB_REPOSITORY environment variable. " +
                     "Are you not running this in a Github Action environment?");
             }
-            const project = (core.getInput("project") || repo).toLowerCase();
+            const project = ((0, core_1.getInput)("project") || repo).toLowerCase();
             const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
             const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
             const eventPullRequest = event.pull_request;
@@ -199,29 +187,28 @@ function run() {
             process.env["MAYHEM_URL"] = mayhemUrl;
             process.env["MAYHEM_PROJECT"] = repo;
             // Start fuzzing
-            const cliRunning = exec.exec("bash", ["-c", script], {
+            const cliRunning = (0, exec_1.exec)("bash", ["-c", script], {
                 ignoreReturnCode: true,
             });
             const res = yield cliRunning;
-            if (res == 1) {
-                /* eslint-disable max-len */
+            if (res === 1) {
                 throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
       Check your configuration. For package visibility/permissions issues, see
       https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
       on how to set your package to 'Public'.`);
             }
-            else if (res == 2) {
+            else if (res === 2) {
                 throw new Error("The Mayhem for Code scan detected the Mayhem run for your " +
                     "target was unsuccessful.");
             }
-            else if (res == 3) {
+            else if (res === 3) {
                 throw new Error("The Mayhem for Code scan found defects in your target.");
             }
         }
         catch (err) {
             if (err instanceof Error) {
-                core.info(`mcode action failed with: ${err.message}`);
-                core.setFailed(err.message);
+                (0, core_1.info)(`mcode action failed with: ${err.message}`);
+                (0, core_1.setFailed)(err.message);
             }
         }
     });
