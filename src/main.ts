@@ -1,44 +1,53 @@
-import * as core from "@actions/core";
-import * as exec from "@actions/exec";
-import * as tc from "@actions/tool-cache";
+import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
+import { exec } from "@actions/exec";
+import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 
 const mayhemUrl: string =
-  core.getInput("mayhem-url") || "https://app.mayhem.security";
+  getInput("mayhem-url") || "https://app.mayhem.security";
 
-/** Return local path to donwloaded or cached CLI */
-async function mcodeCLI(): Promise<string> {
-  // Get latest version from API
-  const os = "Linux";
-  const bin = "mayhem";
+/**
+ * Operating systems that an mCode CLI is available for, mapped to the URL path it can be
+ * downloaded from on a recent Mayhem cluster.
+ */
+enum CliOsPath {
+  Linux = "Linux/mayhem",
+  MacOS = "Darwin/mayhem.pkg",
+  Windows = "Windows/mayhem.exe",
+}
 
-  // Download the CLI and cache it if version is set
-  const mcodePath = await tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
+/**
+ * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
+ * path to the downloaded CLI.
+ * @param url the base URL of the Mayhem cluster, such as "https://app.mayhem.security".
+ * @param os the operating system to download the CLI for.
+ * @return Path to the downloaded mCode CLI; resolves when the CLI download is complete.
+ */
+async function downloadCli(url: string, os: CliOsPath): Promise<string> {
+  // Download the CLI and mark it as executable.
+  const mcodePath = await downloadTool(`${url}/cli/${os}`);
   chmodSync(mcodePath, 0o755);
-  // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
-  // return `${folder}/${bin}`;
   return mcodePath;
 }
 
 /** Mapping action arguments to CLI arguments and completing a run */
 async function run(): Promise<void> {
   try {
-    const cli = await mcodeCLI();
+    const cli = await downloadCli(mayhemUrl, CliOsPath.Linux);
 
     // Load inputs
-    const githubToken: string = core.getInput("github-token", {
+    const githubToken: string = getInput("github-token", {
       required: true,
     });
-    const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
-    const packagePath: string = core.getInput("package") || ".";
-    const sarifOutput: string = core.getInput("sarif-output") || "";
-    const junitOutput: string = core.getInput("junit-output") || "";
-    const coverageOutput: string = core.getInput("coverage-output") || "";
-    const failOnDefects: boolean =
-      core.getBooleanInput("fail-on-defects") || false;
-    const verbosity: string = core.getInput("verbosity") || "info";
-    const owner: string = core.getInput("owner").toLowerCase();
-    const args: string[] = (core.getInput("args") || "").split(" ");
+    const mayhemToken: string = getInput("mayhem-token") || githubToken;
+    const packagePath: string = getInput("package") || ".";
+    const sarifOutput: string = getInput("sarif-output") || "";
+    const junitOutput: string = getInput("junit-output") || "";
+    const coverageOutput: string = getInput("coverage-output") || "";
+    const failOnDefects: boolean = getBooleanInput("fail-on-defects") || false;
+    const verbosity: string = getInput("verbosity") || "info";
+    const owner: string = getInput("owner").toLowerCase();
+    const args: string[] = (getInput("args") || "").split(" ");
 
     // defaults next
     if (!args.includes("--duration")) {
@@ -56,7 +65,7 @@ async function run(): Promise<void> {
       );
     }
 
-    const project: string = (core.getInput("project") || repo).toLowerCase();
+    const project: string = (getInput("project") || repo).toLowerCase();
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
@@ -174,28 +183,27 @@ async function run(): Promise<void> {
     process.env["MAYHEM_PROJECT"] = repo;
 
     // Start fuzzing
-    const cliRunning = exec.exec("bash", ["-c", script], {
+    const cliRunning = exec("bash", ["-c", script], {
       ignoreReturnCode: true,
     });
     const res = await cliRunning;
-    if (res == 1) {
-      /* eslint-disable max-len */
+    if (res === 1) {
       throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
       Check your configuration. For package visibility/permissions issues, see
       https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
       on how to set your package to 'Public'.`);
-    } else if (res == 2) {
+    } else if (res === 2) {
       throw new Error(
         "The Mayhem for Code scan detected the Mayhem run for your " +
           "target was unsuccessful.",
       );
-    } else if (res == 3) {
+    } else if (res === 3) {
       throw new Error("The Mayhem for Code scan found defects in your target.");
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
-      core.info(`mcode action failed with: ${err.message}`);
-      core.setFailed(err.message);
+      info(`mcode action failed with: ${err.message}`);
+      setFailed(err.message);
     }
   }
 }
