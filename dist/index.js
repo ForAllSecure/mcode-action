@@ -182,11 +182,13 @@ function run() {
       exit 2;
     fi
 
-    # Strip the run number from the full run path to get the project/target.
+    # Strip the run number from the full run path to get the project/target,
+    # and save the run number separately.
     target=$(echo $run | sed 's:/[^/]*$::')
+    run_number=$(echo $run | sed 's:.*/::')
 
     if [ -n "${config.coverageOutputDir}" ]; then
-      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} $target -o ${config.coverageOutputDir};
+      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} --output ${config.coverageOutputDir} --run_number $run_number $target;
     fi
     `;
             process.env["MAYHEM_TOKEN"] = config.mayhemToken;
