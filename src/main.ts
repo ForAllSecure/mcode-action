@@ -21,9 +21,9 @@ type Config = {
   mayhemToken: string;
 
   packagePath: string;
-  sarifOutput: string;
-  junitOutput: string;
-  coverageOutput: string;
+  sarifOutputDir: string;
+  junitOutputDir: string;
+  coverageOutputDir: string;
 
   failOnDefects: boolean;
   verbosity: string;
@@ -58,9 +58,9 @@ function getConfig(): Config {
     githubToken,
     mayhemToken: getInput("mayhem-token") || githubToken,
     packagePath: getInput("package") || ".",
-    sarifOutput: getInput("sarif-output") || "",
-    junitOutput: getInput("junit-output") || "",
-    coverageOutput: getInput("coverage-output") || "",
+    sarifOutputDir: getInput("sarif-output") || "",
+    junitOutputDir: getInput("junit-output") || "",
+    coverageOutputDir: getInput("coverage-output") || "",
     failOnDefects: getBooleanInput("fail-on-defects") || false,
     verbosity: getInput("verbosity") || "info",
     owner: getInput("owner").toLowerCase(),
@@ -121,15 +121,15 @@ async function run(): Promise<void> {
     // sarif, junit, coverage
 
     const waitArgs = [];
-    if (config.sarifOutput) {
+    if (config.sarifOutputDir) {
       // $runName is a variable that is set in the bash script
-      waitArgs.push("--sarif", `${config.sarifOutput}/\${runName}.sarif`);
+      waitArgs.push("--sarif", `${config.sarifOutputDir}/\${runName}.sarif`);
     }
-    if (config.junitOutput) {
+    if (config.junitOutputDir) {
       // $runName is a variable that is set in the bash script
-      waitArgs.push("--junit", `${config.junitOutput}/\${runName}.xml`);
+      waitArgs.push("--junit", `${config.junitOutputDir}/\${runName}.xml`);
     }
-    if (config.coverageOutput) {
+    if (config.coverageOutputDir) {
       waitArgs.push("--coverage");
     }
     if (config.failOnDefects) {
@@ -142,18 +142,18 @@ async function run(): Promise<void> {
     const script = `
     set -xe
     # create sarif output directory
-    if [ -n "${config.sarifOutput}" ]; then
-      mkdir -p ${config.sarifOutput};
+    if [ -n "${config.sarifOutputDir}" ]; then
+      mkdir -p ${config.sarifOutputDir};
     fi
 
     # create junit output directory
-    if [ -n "${config.junitOutput}" ]; then
-      mkdir -p ${config.junitOutput};
+    if [ -n "${config.junitOutputDir}" ]; then
+      mkdir -p ${config.junitOutputDir};
     fi
 
     # create coverage output directory
-    if [ -n "${config.coverageOutput}" ]; then
-      mkdir -p ${config.coverageOutput};
+    if [ -n "${config.coverageOutputDir}" ]; then
+      mkdir -p ${config.coverageOutputDir};
     fi
 
     # Run mayhem
@@ -172,9 +172,9 @@ async function run(): Promise<void> {
     fi
 
     # if the user didn't specify requiring any output, don't wait for the result.
-    if [ -z "${config.coverageOutput}" ] && \
-        [ -z "${config.junitOutput}" ] && \
-        [ -z "${config.sarifOutput}" ] && \
+    if [ -z "${config.coverageOutputDir}" ] && \
+        [ -z "${config.junitOutputDir}" ] && \
+        [ -z "${config.sarifOutputDir}" ] && \
         [ "${config.failOnDefects.toString().toLowerCase()}" != "true" ]; then
       echo "No coverage, junit or sarif output requested, not waiting for job result.";
       exit 0;
@@ -202,8 +202,8 @@ async function run(): Promise<void> {
     # Strip the run number from the full run path to get the project/target.
     target=$(echo $run | sed 's:/[^/]*$::')
 
-    if [ -n "${config.coverageOutput}" ]; then
-      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} $target -o ${config.coverageOutput};
+    if [ -n "${config.coverageOutputDir}" ]; then
+      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} $target -o ${config.coverageOutputDir};
     fi
     `;
 

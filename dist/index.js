@@ -31,6 +31,42 @@ var CliOsPath;
     CliOsPath["MacOS"] = "Darwin/mayhem.pkg";
     CliOsPath["Windows"] = "Windows/mayhem.exe";
 })(CliOsPath || (CliOsPath = {}));
+function getConfig() {
+    var _a;
+    const githubToken = (0, core_1.getInput)("github-token", {
+        required: true,
+    });
+    const repo = process.env["GITHUB_REPOSITORY"];
+    if (repo === undefined) {
+        throw Error("Missing GITHUB_REPOSITORY environment variable. " +
+            "Are you not running this in a Github Action environment?");
+    }
+    const ghRepo = `${process.env["GITHUB_SERVER_URL"]}:443/${repo}/`;
+    const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
+    const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
+    const eventPullRequest = event.pull_request;
+    return {
+        githubToken,
+        mayhemToken: (0, core_1.getInput)("mayhem-token") || githubToken,
+        packagePath: (0, core_1.getInput)("package") || ".",
+        sarifOutputDir: (0, core_1.getInput)("sarif-output") || "",
+        junitOutputDir: (0, core_1.getInput)("junit-output") || "",
+        coverageOutputDir: (0, core_1.getInput)("coverage-output") || "",
+        failOnDefects: (0, core_1.getBooleanInput)("fail-on-defects") || false,
+        verbosity: (0, core_1.getInput)("verbosity") || "info",
+        owner: (0, core_1.getInput)("owner").toLowerCase(),
+        project: ((0, core_1.getInput)("project") || repo).toLowerCase(),
+        repo,
+        ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
+        branchName: eventPullRequest
+            ? eventPullRequest.head.ref
+            : ((_a = process.env["GITHUB_REF_NAME"]) === null || _a === void 0 ? void 0 : _a.slice("refs/heads/".length)) || "main",
+        revision: eventPullRequest
+            ? eventPullRequest.head.sha
+            : process.env["GITHUB_SHA"] || "unknown",
+        mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
+    };
+}
 /**
  * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
  * path to the downloaded CLI.
@@ -49,21 +85,11 @@ function downloadCli(url, os) {
 /** Mapping action arguments to CLI arguments and completing a run */
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
         try {
+            // Validate the action inputs and create a Config object from them.
+            const config = getConfig();
+            // Download the mCode CLI for Linux.
             const cli = yield downloadCli(mayhemUrl, CliOsPath.Linux);
-            // Load inputs
-            const githubToken = (0, core_1.getInput)("github-token", {
-                required: true,
-            });
-            const mayhemToken = (0, core_1.getInput)("mayhem-token") || githubToken;
-            const packagePath = (0, core_1.getInput)("package") || ".";
-            const sarifOutput = (0, core_1.getInput)("sarif-output") || "";
-            const junitOutput = (0, core_1.getInput)("junit-output") || "";
-            const coverageOutput = (0, core_1.getInput)("coverage-output") || "";
-            const failOnDefects = (0, core_1.getBooleanInput)("fail-on-defects") || false;
-            const verbosity = (0, core_1.getInput)("verbosity") || "info";
-            const owner = (0, core_1.getInput)("owner").toLowerCase();
             const args = ((0, core_1.getInput)("args") || "").split(" ");
             // defaults next
             if (!args.includes("--duration")) {
@@ -72,46 +98,26 @@ function run() {
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
-            const repo = process.env["GITHUB_REPOSITORY"];
-            if (repo === undefined) {
-                throw Error("Missing GITHUB_REPOSITORY environment variable. " +
-                    "Are you not running this in a Github Action environment?");
-            }
-            const project = ((0, core_1.getInput)("project") || repo).toLowerCase();
-            const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
-            const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
-            const eventPullRequest = event.pull_request;
-            const ghRepo = `${process.env["GITHUB_SERVER_URL"]}:443/${repo}/`;
-            const ciUrl = `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
-            const branchName = eventPullRequest
-                ? eventPullRequest.head.ref
-                : ((_a = process.env["GITHUB_REF_NAME"]) === null || _a === void 0 ? void 0 : _a.slice("refs/heads/".length)) || "main";
-            const revision = eventPullRequest
-                ? eventPullRequest.head.sha
-                : process.env["GITHUB_SHA"] || "unknown";
-            const mergeBaseBranchName = eventPullRequest
-                ? eventPullRequest.base.ref
-                : "main";
-            args.push("--ci-url", ciUrl);
-            args.push("--merge-base-branch-name", mergeBaseBranchName);
-            args.push("--branch-name", branchName);
-            args.push("--revision", revision);
+            args.push("--ci-url", config.ciUrl);
+            args.push("--merge-base-branch-name", config.mergeBaseBranchName);
+            args.push("--branch-name", config.branchName);
+            args.push("--revision", config.revision);
             const argsString = args.join(" ");
             // Generate arguments for wait command
             // sarif, junit, coverage
             const waitArgs = [];
-            if (sarifOutput) {
+            if (config.sarifOutputDir) {
                 // $runName is a variable that is set in the bash script
-                waitArgs.push("--sarif", `${sarifOutput}/\${runName}.sarif`);
+                waitArgs.push("--sarif", `${config.sarifOutputDir}/\${runName}.sarif`);
             }
-            if (junitOutput) {
+            if (config.junitOutputDir) {
                 // $runName is a variable that is set in the bash script
-                waitArgs.push("--junit", `${junitOutput}/\${runName}.xml`);
+                waitArgs.push("--junit", `${config.junitOutputDir}/\${runName}.xml`);
             }
-            if (coverageOutput) {
+            if (config.coverageOutputDir) {
                 waitArgs.push("--coverage");
             }
-            if (failOnDefects) {
+            if (config.failOnDefects) {
                 waitArgs.push("--fail-on-defects");
             }
             // create wait args string
@@ -119,24 +125,24 @@ function run() {
             const script = `
     set -xe
     # create sarif output directory
-    if [ -n "${sarifOutput}" ]; then
-      mkdir -p ${sarifOutput};
+    if [ -n "${config.sarifOutputDir}" ]; then
+      mkdir -p ${config.sarifOutputDir};
     fi
 
     # create junit output directory
-    if [ -n "${junitOutput}" ]; then
-      mkdir -p ${junitOutput};
+    if [ -n "${config.junitOutputDir}" ]; then
+      mkdir -p ${config.junitOutputDir};
     fi
 
     # create coverage output directory
-    if [ -n "${coverageOutput}" ]; then
-      mkdir -p ${coverageOutput};
+    if [ -n "${config.coverageOutputDir}" ]; then
+      mkdir -p ${config.coverageOutputDir};
     fi
 
     # Run mayhem
-    run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
-                 --project ${project} \
-                 --owner ${owner} ${argsString});
+    run=$(${cli} --verbosity ${config.verbosity} run ${config.packagePath} \
+                 --project ${config.project} \
+                 --owner ${config.owner} ${argsString});
 
     # Persist the run id to the GitHub output
     echo "runId=$run" >> $GITHUB_OUTPUT;
@@ -149,10 +155,10 @@ function run() {
     fi
 
     # if the user didn't specify requiring any output, don't wait for the result.
-    if [ -z "${coverageOutput}" ] && \
-        [ -z "${junitOutput}" ] && \
-        [ -z "${sarifOutput}" ] && \
-        [ "${failOnDefects.toString().toLowerCase()}" != "true" ]; then
+    if [ -z "${config.coverageOutputDir}" ] && \
+        [ -z "${config.junitOutputDir}" ] && \
+        [ -z "${config.sarifOutputDir}" ] && \
+        [ "${config.failOnDefects.toString().toLowerCase()}" != "true" ]; then
       echo "No coverage, junit or sarif output requested, not waiting for job result.";
       exit 0;
     fi
@@ -161,16 +167,16 @@ function run() {
     runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
 
     # wait for run to finish
-    if ! ${cli} --verbosity ${verbosity} wait $run \
-            --owner ${owner} \
+    if ! ${cli} --verbosity ${config.verbosity} wait $run \
+            --owner ${config.owner} \
             ${waitArgsString}; then
       exit 3;
     fi
     
     
     # check status, exit with non-zero status if failed or stopped
-    status=$(${cli} --verbosity ${verbosity} show \
-                    --owner ${owner} \
+    status=$(${cli} --verbosity ${config.verbosity} show \
+                    --owner ${config.owner} \
                     --format json $run | jq '.[0].status');
     if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
       exit 2;
@@ -179,13 +185,13 @@ function run() {
     # Strip the run number from the full run path to get the project/target.
     target=$(echo $run | sed 's:/[^/]*$::')
 
-    if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download --owner ${owner} $target -o ${coverageOutput};
+    if [ -n "${config.coverageOutputDir}" ]; then
+      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} $target -o ${config.coverageOutputDir};
     fi
     `;
-            process.env["MAYHEM_TOKEN"] = mayhemToken;
+            process.env["MAYHEM_TOKEN"] = config.mayhemToken;
             process.env["MAYHEM_URL"] = mayhemUrl;
-            process.env["MAYHEM_PROJECT"] = repo;
+            process.env["MAYHEM_PROJECT"] = config.repo;
             // Start fuzzing
             const cliRunning = (0, exec_1.exec)("bash", ["-c", script], {
                 ignoreReturnCode: true,
