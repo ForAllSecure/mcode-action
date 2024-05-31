@@ -1,44 +1,106 @@
-import * as core from "@actions/core";
-import * as exec from "@actions/exec";
-import * as tc from "@actions/tool-cache";
+import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
+import { exec } from "@actions/exec";
+import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 
 const mayhemUrl: string =
-  core.getInput("mayhem-url") || "https://app.mayhem.security";
+  getInput("mayhem-url") || "https://app.mayhem.security";
 
-/** Return local path to donwloaded or cached CLI */
-async function mcodeCLI(): Promise<string> {
-  // Get latest version from API
-  const os = "Linux";
-  const bin = "mayhem";
+/**
+ * Operating systems that an mCode CLI is available for, mapped to the URL path it can be
+ * downloaded from on a recent Mayhem cluster.
+ */
+enum CliOsPath {
+  Linux = "Linux/mayhem",
+  MacOS = "Darwin/mayhem.pkg",
+  Windows = "Windows/mayhem.exe",
+}
 
-  // Download the CLI and cache it if version is set
-  const mcodePath = await tc.downloadTool(`${mayhemUrl}/cli/${os}/${bin}`);
+type Config = {
+  githubToken: string;
+  mayhemToken: string;
+
+  packagePath: string;
+  sarifOutputDir: string;
+  junitOutputDir: string;
+  coverageOutputDir: string;
+
+  failOnDefects: boolean;
+  verbosity: string;
+  owner: string;
+  project: string;
+  repo: string;
+  ciUrl: string;
+  branchName: string;
+  revision: string;
+  mergeBaseBranchName: string;
+};
+
+function getConfig(): Config {
+  const githubToken: string = getInput("github-token", {
+    required: true,
+  });
+
+  const repo = process.env["GITHUB_REPOSITORY"];
+  if (repo === undefined) {
+    throw Error(
+      "Missing GITHUB_REPOSITORY environment variable. " +
+        "Are you not running this in a Github Action environment?",
+    );
+  }
+
+  const ghRepo = `${process.env["GITHUB_SERVER_URL"]}:443/${repo}/`;
+  const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
+  const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
+  const eventPullRequest = event.pull_request;
+
+  return {
+    githubToken,
+    mayhemToken: getInput("mayhem-token") || githubToken,
+    packagePath: getInput("package") || ".",
+    sarifOutputDir: getInput("sarif-output") || "",
+    junitOutputDir: getInput("junit-output") || "",
+    coverageOutputDir: getInput("coverage-output") || "",
+    failOnDefects: getBooleanInput("fail-on-defects") || false,
+    verbosity: getInput("verbosity") || "info",
+    owner: getInput("owner").toLowerCase(),
+    project: (getInput("project") || repo).toLowerCase(),
+    repo,
+    ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
+    branchName: eventPullRequest
+      ? eventPullRequest.head.ref
+      : process.env["GITHUB_REF_NAME"]?.slice("refs/heads/".length) || "main",
+    revision: eventPullRequest
+      ? eventPullRequest.head.sha
+      : process.env["GITHUB_SHA"] || "unknown",
+    mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
+  };
+}
+
+/**
+ * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
+ * path to the downloaded CLI.
+ * @param url the base URL of the Mayhem cluster, such as "https://app.mayhem.security".
+ * @param os the operating system to download the CLI for.
+ * @return Path to the downloaded mCode CLI; resolves when the CLI download is complete.
+ */
+async function downloadCli(url: string, os: CliOsPath): Promise<string> {
+  // Download the CLI and mark it as executable.
+  const mcodePath = await downloadTool(`${url}/cli/${os}`);
   chmodSync(mcodePath, 0o755);
-  // const folder = await tc.cacheFile(mcodePath, bin, bin, cliVersion, os);
-  // return `${folder}/${bin}`;
   return mcodePath;
 }
 
 /** Mapping action arguments to CLI arguments and completing a run */
 async function run(): Promise<void> {
   try {
-    const cli = await mcodeCLI();
+    // Validate the action inputs and create a Config object from them.
+    const config = getConfig();
 
-    // Load inputs
-    const githubToken: string = core.getInput("github-token", {
-      required: true,
-    });
-    const mayhemToken: string = core.getInput("mayhem-token") || githubToken;
-    const packagePath: string = core.getInput("package") || ".";
-    const sarifOutput: string = core.getInput("sarif-output") || "";
-    const junitOutput: string = core.getInput("junit-output") || "";
-    const coverageOutput: string = core.getInput("coverage-output") || "";
-    const failOnDefects: boolean =
-      core.getBooleanInput("fail-on-defects") || false;
-    const verbosity: string = core.getInput("verbosity") || "info";
-    const owner: string = core.getInput("owner").toLowerCase();
-    const args: string[] = (core.getInput("args") || "").split(" ");
+    // Download the mCode CLI for Linux.
+    const cli = await downloadCli(mayhemUrl, CliOsPath.Linux);
+
+    const args: string[] = (getInput("args") || "").split(" ");
 
     // defaults next
     if (!args.includes("--duration")) {
@@ -48,34 +110,10 @@ async function run(): Promise<void> {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
 
-    const repo = process.env["GITHUB_REPOSITORY"];
-    if (repo === undefined) {
-      throw Error(
-        "Missing GITHUB_REPOSITORY environment variable. " +
-          "Are you not running this in a Github Action environment?",
-      );
-    }
-
-    const project: string = (core.getInput("project") || repo).toLowerCase();
-    const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
-    const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
-    const eventPullRequest = event.pull_request;
-    const ghRepo = `${process.env["GITHUB_SERVER_URL"]}:443/${repo}/`;
-    const ciUrl = `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`;
-    const branchName = eventPullRequest
-      ? eventPullRequest.head.ref
-      : process.env["GITHUB_REF_NAME"]?.slice("refs/heads/".length) || "main";
-    const revision = eventPullRequest
-      ? eventPullRequest.head.sha
-      : process.env["GITHUB_SHA"] || "unknown";
-    const mergeBaseBranchName = eventPullRequest
-      ? eventPullRequest.base.ref
-      : "main";
-
-    args.push("--ci-url", ciUrl);
-    args.push("--merge-base-branch-name", mergeBaseBranchName);
-    args.push("--branch-name", branchName);
-    args.push("--revision", revision);
+    args.push("--ci-url", config.ciUrl);
+    args.push("--merge-base-branch-name", config.mergeBaseBranchName);
+    args.push("--branch-name", config.branchName);
+    args.push("--revision", config.revision);
 
     const argsString = args.join(" ");
 
@@ -83,18 +121,18 @@ async function run(): Promise<void> {
     // sarif, junit, coverage
 
     const waitArgs = [];
-    if (sarifOutput) {
+    if (config.sarifOutputDir) {
       // $runName is a variable that is set in the bash script
-      waitArgs.push("--sarif", `${sarifOutput}/\${runName}.sarif`);
+      waitArgs.push("--sarif", `${config.sarifOutputDir}/\${runName}.sarif`);
     }
-    if (junitOutput) {
+    if (config.junitOutputDir) {
       // $runName is a variable that is set in the bash script
-      waitArgs.push("--junit", `${junitOutput}/\${runName}.xml`);
+      waitArgs.push("--junit", `${config.junitOutputDir}/\${runName}.xml`);
     }
-    if (coverageOutput) {
+    if (config.coverageOutputDir) {
       waitArgs.push("--coverage");
     }
-    if (failOnDefects) {
+    if (config.failOnDefects) {
       waitArgs.push("--fail-on-defects");
     }
 
@@ -104,24 +142,24 @@ async function run(): Promise<void> {
     const script = `
     set -xe
     # create sarif output directory
-    if [ -n "${sarifOutput}" ]; then
-      mkdir -p ${sarifOutput};
+    if [ -n "${config.sarifOutputDir}" ]; then
+      mkdir -p ${config.sarifOutputDir};
     fi
 
     # create junit output directory
-    if [ -n "${junitOutput}" ]; then
-      mkdir -p ${junitOutput};
+    if [ -n "${config.junitOutputDir}" ]; then
+      mkdir -p ${config.junitOutputDir};
     fi
 
     # create coverage output directory
-    if [ -n "${coverageOutput}" ]; then
-      mkdir -p ${coverageOutput};
+    if [ -n "${config.coverageOutputDir}" ]; then
+      mkdir -p ${config.coverageOutputDir};
     fi
 
     # Run mayhem
-    run=$(${cli} --verbosity ${verbosity} run ${packagePath} \
-                 --project ${project} \
-                 --owner ${owner} ${argsString});
+    run=$(${cli} --verbosity ${config.verbosity} run ${config.packagePath} \
+                 --project ${config.project} \
+                 --owner ${config.owner} ${argsString});
 
     # Persist the run id to the GitHub output
     echo "runId=$run" >> $GITHUB_OUTPUT;
@@ -134,10 +172,10 @@ async function run(): Promise<void> {
     fi
 
     # if the user didn't specify requiring any output, don't wait for the result.
-    if [ -z "${coverageOutput}" ] && \
-        [ -z "${junitOutput}" ] && \
-        [ -z "${sarifOutput}" ] && \
-        [ "${failOnDefects.toString().toLowerCase()}" != "true" ]; then
+    if [ -z "${config.coverageOutputDir}" ] && \
+        [ -z "${config.junitOutputDir}" ] && \
+        [ -z "${config.sarifOutputDir}" ] && \
+        [ "${config.failOnDefects.toString().toLowerCase()}" != "true" ]; then
       echo "No coverage, junit or sarif output requested, not waiting for job result.";
       exit 0;
     fi
@@ -146,56 +184,57 @@ async function run(): Promise<void> {
     runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
 
     # wait for run to finish
-    if ! ${cli} --verbosity ${verbosity} wait $run \
-            --owner ${owner} \
+    if ! ${cli} --verbosity ${config.verbosity} wait $run \
+            --owner ${config.owner} \
             ${waitArgsString}; then
       exit 3;
     fi
     
     
     # check status, exit with non-zero status if failed or stopped
-    status=$(${cli} --verbosity ${verbosity} show \
-                    --owner ${owner} \
+    status=$(${cli} --verbosity ${config.verbosity} show \
+                    --owner ${config.owner} \
                     --format json $run | jq '.[0].status');
     if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
       exit 2;
     fi
 
-    # Strip the run number from the full run path to get the project/target.
+    # Strip the run number from the full run path to get the project/target,
+    # and save the run number separately.
     target=$(echo $run | sed 's:/[^/]*$::')
+    run_number=$(echo $run | sed 's:.*/::')
 
-    if [ -n "${coverageOutput}" ]; then
-      ${cli} --verbosity ${verbosity} download --owner ${owner} $target -o ${coverageOutput};
+    if [ -n "${config.coverageOutputDir}" ]; then
+      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} --output ${config.coverageOutputDir} --run_number $run_number $target;
     fi
     `;
 
-    process.env["MAYHEM_TOKEN"] = mayhemToken;
+    process.env["MAYHEM_TOKEN"] = config.mayhemToken;
     process.env["MAYHEM_URL"] = mayhemUrl;
-    process.env["MAYHEM_PROJECT"] = repo;
+    process.env["MAYHEM_PROJECT"] = config.repo;
 
     // Start fuzzing
-    const cliRunning = exec.exec("bash", ["-c", script], {
+    const cliRunning = exec("bash", ["-c", script], {
       ignoreReturnCode: true,
     });
     const res = await cliRunning;
-    if (res == 1) {
-      /* eslint-disable max-len */
+    if (res === 1) {
       throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
       Check your configuration. For package visibility/permissions issues, see
       https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
       on how to set your package to 'Public'.`);
-    } else if (res == 2) {
+    } else if (res === 2) {
       throw new Error(
         "The Mayhem for Code scan detected the Mayhem run for your " +
           "target was unsuccessful.",
       );
-    } else if (res == 3) {
+    } else if (res === 3) {
       throw new Error("The Mayhem for Code scan found defects in your target.");
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
-      core.info(`mcode action failed with: ${err.message}`);
-      core.setFailed(err.message);
+      info(`mcode action failed with: ${err.message}`);
+      setFailed(err.message);
     }
   }
 }
