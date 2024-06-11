@@ -1,5 +1,6 @@
 import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
 import { exec } from "@actions/exec";
+import { context as githubContext } from '@actions/github';
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 
@@ -40,6 +41,13 @@ function getConfig(): Config {
   const githubToken: string = getInput("github-token", {
     required: true,
   });
+  process.env["GITHUB_TOKEN"] = githubToken;
+
+  const issueNumber = githubContext.issue.number
+  if (issueNumber) {
+    process.env['GITHUB_ISSUE_ID'] = String(issueNumber)
+  }
+
 
   const repo = process.env["GITHUB_REPOSITORY"];
   if (repo === undefined) {
@@ -189,8 +197,8 @@ async function run(): Promise<void> {
             ${waitArgsString}; then
       exit 3;
     fi
-    
-    
+
+
     # check status, exit with non-zero status if failed or stopped
     status=$(${cli} --verbosity ${config.verbosity} show \
                     --owner ${config.owner} \
