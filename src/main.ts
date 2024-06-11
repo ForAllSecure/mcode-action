@@ -43,9 +43,9 @@ function getConfig(): Config {
   });
   process.env["GITHUB_TOKEN"] = githubToken;
 
-  const issue_number = github.context.issue.number
-  if (issue_number) {
-    process.env['GITHUB_ISSUE_ID'] = String(issue_number)
+  const issueNumber = github.context.issue.number
+  if (issueNumber) {
+    process.env['GITHUB_ISSUE_ID'] = String(issueNumber)
   }
 
 
