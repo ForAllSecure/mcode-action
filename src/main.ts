@@ -1,6 +1,6 @@
 import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
 import { exec } from "@actions/exec";
-import * as github from '@actions/github';
+import { context as githubContext } from '@actions/github';
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 
@@ -43,7 +43,7 @@ function getConfig(): Config {
   });
   process.env["GITHUB_TOKEN"] = githubToken;
 
-  const issueNumber = github.context.issue.number
+  const issueNumber = githubContext.issue.number
   if (issueNumber) {
     process.env['GITHUB_ISSUE_ID'] = String(issueNumber)
   }
