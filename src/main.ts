@@ -1,8 +1,8 @@
 import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
 import { exec } from "@actions/exec";
+import * as github from '@actions/github';
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
-import * as github from '@actions/github'
 
 const mayhemUrl: string =
   getInput("mayhem-url") || "https://app.mayhem.security";
