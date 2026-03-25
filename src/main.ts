@@ -110,9 +110,8 @@ async function run(): Promise<void> {
     const args: string[] = (getInput("args") || "").split(" ");
 
     // defaults next
-    if (!args.includes("--duration")) {
-      args.push("--duration", "60");
-    }
+    args.push("--duration", "1200");
+
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
