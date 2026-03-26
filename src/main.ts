@@ -121,29 +121,7 @@ async function run(): Promise<void> {
     args.push("--branch-name", config.branchName);
     args.push("--revision", config.revision);
 
-    const argsString = args.join(" ");
-
-    // Generate arguments for wait command
-    // sarif, junit, coverage
-
-    const waitArgs = [];
-    if (config.sarifOutputDir) {
-      // $runName is a variable that is set in the bash script
-      waitArgs.push("--sarif", `${config.sarifOutputDir}/\${runName}.sarif`);
-    }
-    if (config.junitOutputDir) {
-      // $runName is a variable that is set in the bash script
-      waitArgs.push("--junit", `${config.junitOutputDir}/\${runName}.xml`);
-    }
-    if (config.coverageOutputDir) {
-      waitArgs.push("--coverage");
-    }
-    if (config.failOnDefects) {
-      waitArgs.push("--fail-on-defects");
-    }
-
-    // create wait args string
-    const waitArgsString = waitArgs.join(" ");
+    const argsString = args.join(" ");   
 
     const script = `
     set -xe
@@ -175,44 +153,7 @@ async function run(): Promise<void> {
     else
       echo "Could not start run successfully, exiting with non-zero exit code.".
       exit 1;
-    fi
-
-    # if the user didn't specify requiring any output, don't wait for the result.
-    if [ -z "${config.coverageOutputDir}" ] && \
-        [ -z "${config.junitOutputDir}" ] && \
-        [ -z "${config.sarifOutputDir}" ] && \
-        [ "${config.failOnDefects.toString().toLowerCase()}" != "true" ]; then
-      echo "No coverage, junit or sarif output requested, not waiting for job result.";
-      exit 0;
-    fi
-
-    # run name is the last part of the run id
-    runName="$(echo $run | awk -F / '{ print $(NF-1) }')";
-
-    # wait for run to finish
-    if ! ${cli} --verbosity ${config.verbosity} wait $run \
-            --owner ${config.owner} \
-            ${waitArgsString}; then
-      exit 3;
-    fi
-
-
-    # check status, exit with non-zero status if failed or stopped
-    status=$(${cli} --verbosity ${config.verbosity} show \
-                    --owner ${config.owner} \
-                    --format json $run | jq '.[0].status');
-    if [[ $status == *"stopped"* || $status == *"failed"* ]]; then
-      exit 2;
-    fi
-
-    # Strip the run number from the full run path to get the project/target,
-    # and save the run number separately.
-    target=$(echo $run | sed 's:/[^/]*$::')
-    run_number=$(echo $run | sed 's:.*/::')
-
-    if [ -n "${config.coverageOutputDir}" ]; then
-      ${cli} --verbosity ${config.verbosity} download --owner ${config.owner} --output ${config.coverageOutputDir} --run_number $run_number $target;
-    fi
+    fi    
     `;
 
     process.env["MAYHEM_TOKEN"] = config.mayhemToken;
