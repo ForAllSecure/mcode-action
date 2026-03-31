@@ -98,7 +98,7 @@ function run() {
             const cli = yield downloadCli(mayhemUrl, CliOsPath.Linux);
             const args = ((0, core_1.getInput)("args") || "").split(" ");
             // defaults next
-            args.push("--duration", "1200");
+            args.push("--duration", "3600");
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
