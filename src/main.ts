@@ -161,23 +161,36 @@ async function run(): Promise<void> {
     process.env["MAYHEM_PROJECT"] = config.repo;
 
     // Start fuzzing
-    const cliRunning = exec("bash", ["-c", script], {
-      ignoreReturnCode: true,
-    });
-    const res = await cliRunning;
-    if (res === 1) {
-      throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
-      Check your configuration. For package visibility/permissions issues, see
-      https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
-      on how to set your package to 'Public'.`);
-    } else if (res === 2) {
-      throw new Error(
-        "The Mayhem for Code scan detected the Mayhem run for your " +
-          "target was unsuccessful.",
-      );
-    } else if (res === 3) {
-      throw new Error("The Mayhem for Code scan found defects in your target.");
-    }
+    const attempts = 10;
+    let retry = 0;
+    const delay = 60000;
+    const factor = 2;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const cliRunning = exec("bash", ["-c", script], {
+        ignoreReturnCode: true,
+      });
+      const res = await cliRunning;
+      if (res === 0) {
+        break;
+      } else if(res === 1) {
+        if (retry >= attempts){
+          throw new Error(`The Mayhem for Code scan was unable to execute the Mayhem run for your target.
+            Check your configuration. For package visibility/permissions issues, see
+            https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility
+            on how to set your package to 'Public'.`);
+        }else {
+          retry++;
+          setTimeout(() => {}, delay * factor ** retry + Math.random() * 1000);
+        }
+      } else if(res === 2) {
+        throw new Error("The Mayhem for Code scan detected the Mayhem run for your " +
+          "target was unsuccessful.");
+      } else if(res === 3) {
+        throw new Error("The Mayhem for Code scan found defects in your target.");
+      } 
+      break;
+    }    
   } catch (err: unknown) {
     if (err instanceof Error) {
       info(`mcode action failed with: ${err.message}`);
