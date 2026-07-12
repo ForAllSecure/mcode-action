@@ -199,7 +199,14 @@ function run() {
     `;
             process.env["MAYHEM_TOKEN"] = config.mayhemToken;
             process.env["MAYHEM_URL"] = mayhemUrl;
-            process.env["MAYHEM_PROJECT"] = config.repo;
+            // Match the --owner/--project flags passed to `mayhem run` above, so the
+            // wait/show/download subcommands (which only get --owner explicitly)
+            // resolve the same project instead of falling back to the GitHub repo.
+            // `project` may already be a fully-qualified "owner/project" reference,
+            // in which case `owner` shouldn't be prepended again.
+            process.env["MAYHEM_PROJECT"] = config.project.includes("/")
+                ? config.project
+                : `${config.owner}/${config.project}`;
             // Start fuzzing
             const cliRunning = (0, exec_1.exec)("bash", ["-c", script], {
                 ignoreReturnCode: true,
