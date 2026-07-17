@@ -156,6 +156,7 @@ The mCode Action accepts the following inputs:
 | --- | --- | --- | --- | ---
 |   | `mayhem-url` | string | Path to a custom Mayhem for Code instance. | https://app.mayhem.security |
 |   | `mayhem-token` | string | Mayhem for Code account token. **Only required within** `mayhem.yml` **if overriding** `mayhem-url`. |
+|   | `duration` | number | Duration of the run in seconds. Takes precedence over any `--duration` passed via `args`. | 60 |
 |   | `args` | string | Additional CLI override [arguments](https://app.mayhem.security/docs/code-testing/reference/mayhem-cli-commands/#run) such as specifying the `--testsuite` directory path for a seed test suite. |
 |   | `sarif-output` | string | Path for generating a SARIF report output file. |
 |   | `junit-output` | string | Path for generating a jUnit report output file. |

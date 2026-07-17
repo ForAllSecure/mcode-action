@@ -39,11 +39,14 @@ inputs:
     description: Path to the Mayhem package relative to the repository root
     required: false
     default: "."
+  duration:
+    description: Duration of the run in seconds. Takes precedence over any '--duration' passed via 'args'. Defaults to 60 seconds if neither is set.
+    required: false
   args:
     description: Command line arguments to override CLI behavior
     required: false
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"
 outputs:
   runId:

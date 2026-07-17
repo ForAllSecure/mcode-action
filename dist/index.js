@@ -51,10 +51,18 @@ function getConfig() {
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
+    // Optional typed run duration (in seconds). When set it must be a positive
+    // integer; it takes precedence over any `--duration` passed via `args`.
+    const duration = (0, core_1.getInput)("duration");
+    if (duration && (!/^\d+$/.test(duration) || parseInt(duration, 10) <= 0)) {
+        throw Error(`Invalid 'duration' input: '${duration}'. ` +
+            "It must be a positive integer number of seconds.");
+    }
     return {
         githubToken,
         mayhemToken: (0, core_1.getInput)("mayhem-token") || githubToken,
         packagePath: (0, core_1.getInput)("package") || ".",
+        duration,
         sarifOutputDir: (0, core_1.getInput)("sarif-output") || "",
         junitOutputDir: (0, core_1.getInput)("junit-output") || "",
         coverageOutputDir: (0, core_1.getInput)("coverage-output") || "",
@@ -97,9 +105,27 @@ function run() {
             // Download the mCode CLI for Linux.
             const cli = yield downloadCli(mayhemUrl, CliOsPath.Linux);
             const args = ((0, core_1.getInput)("args") || "").split(" ");
-            // defaults next
-            if (!args.includes("--duration")) {
+            // Resolve the effective run duration. Precedence:
+            //   1. the typed `duration` input,
+            //   2. a `--duration` passed inside `args`,
+            //   3. the documented default of 60 seconds.
+            const argsDurationIndex = args.indexOf("--duration");
+            if (config.duration) {
+                if (argsDurationIndex !== -1) {
+                    // The typed input wins over a --duration smuggled through args.
+                    args.splice(argsDurationIndex, 2, "--duration", config.duration);
+                }
+                else {
+                    args.push("--duration", config.duration);
+                }
+                (0, core_1.info)(`Duration: ${config.duration}s (from the 'duration' input).`);
+            }
+            else if (argsDurationIndex !== -1) {
+                (0, core_1.info)(`Duration: ${args[argsDurationIndex + 1]}s (from '--duration' in 'args').`);
+            }
+            else {
                 args.push("--duration", "60");
+                (0, core_1.info)("Duration: 60s (default).");
             }
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
