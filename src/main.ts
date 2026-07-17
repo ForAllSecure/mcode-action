@@ -64,10 +64,10 @@ function getConfig(): Config {
 
   // Optional typed run duration (in seconds). When set it must be a positive
   // integer; it takes precedence over any `--duration` passed via `args`.
-  const duration = getInput("duration");
-  if (duration) {
-    validateDuration(duration, "duration input");
-  }
+  const rawDuration = getInput("duration");
+  const duration = rawDuration
+    ? validateDuration(rawDuration, "duration input")
+    : "";
 
   return {
     githubToken,
@@ -94,20 +94,24 @@ function getConfig(): Config {
 }
 
 /**
- * Validates a run duration (in seconds). A duration must be a positive integer;
- * anything else (a decimal like "30.5", a suffix like "20m", zero, a missing
- * value) is rejected, since the CLI would otherwise treat a malformed duration
- * as an unbounded run. Throws with a message naming `source` on invalid input.
+ * Validates a run duration (in seconds) and returns it in canonical form. A
+ * duration must be a positive integer; anything else (a decimal like "30.5", a
+ * suffix like "20m", zero, a missing value) is rejected, since the CLI would
+ * otherwise treat a malformed duration as an unbounded run. Leading zeros are
+ * stripped ("000000120" -> "120") so the CLI receives a clean value. Throws
+ * with a message naming `source` on invalid input.
  * @param value the raw duration string to validate.
  * @param source human-readable origin of the value, used in the error message.
+ * @return the duration normalized to its canonical decimal integer string.
  */
-function validateDuration(value: string, source: string): void {
+function validateDuration(value: string, source: string): string {
   if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
     throw Error(
       `invalid duration '${value}' (${source}): ` +
         "it must be a positive integer number of seconds.",
     );
   }
+  return String(parseInt(value, 10));
 }
 
 /**
@@ -149,8 +153,12 @@ async function run(): Promise<void> {
       }
       info(`Duration: ${config.duration}s (from the 'duration' input).`);
     } else if (argsDurationIndex !== -1) {
-      const argsDuration = args[argsDurationIndex + 1] ?? "";
-      validateDuration(argsDuration, "--duration in args");
+      const argsDuration = validateDuration(
+        args[argsDurationIndex + 1] ?? "",
+        "--duration in args",
+      );
+      // Write the normalized value back so the CLI gets a clean duration.
+      args[argsDurationIndex + 1] = argsDuration;
       info(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
     } else {
       args.push("--duration", "60");

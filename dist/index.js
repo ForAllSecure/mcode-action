@@ -53,10 +53,10 @@ function getConfig() {
     const eventPullRequest = event.pull_request;
     // Optional typed run duration (in seconds). When set it must be a positive
     // integer; it takes precedence over any `--duration` passed via `args`.
-    const duration = (0, core_1.getInput)("duration");
-    if (duration) {
-        validateDuration(duration, "duration input");
-    }
+    const rawDuration = (0, core_1.getInput)("duration");
+    const duration = rawDuration
+        ? validateDuration(rawDuration, "duration input")
+        : "";
     return {
         githubToken,
         mayhemToken: (0, core_1.getInput)("mayhem-token") || githubToken,
@@ -81,18 +81,22 @@ function getConfig() {
     };
 }
 /**
- * Validates a run duration (in seconds). A duration must be a positive integer;
- * anything else (a decimal like "30.5", a suffix like "20m", zero, a missing
- * value) is rejected, since the CLI would otherwise treat a malformed duration
- * as an unbounded run. Throws with a message naming `source` on invalid input.
+ * Validates a run duration (in seconds) and returns it in canonical form. A
+ * duration must be a positive integer; anything else (a decimal like "30.5", a
+ * suffix like "20m", zero, a missing value) is rejected, since the CLI would
+ * otherwise treat a malformed duration as an unbounded run. Leading zeros are
+ * stripped ("000000120" -> "120") so the CLI receives a clean value. Throws
+ * with a message naming `source` on invalid input.
  * @param value the raw duration string to validate.
  * @param source human-readable origin of the value, used in the error message.
+ * @return the duration normalized to its canonical decimal integer string.
  */
 function validateDuration(value, source) {
     if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
         throw Error(`invalid duration '${value}' (${source}): ` +
             "it must be a positive integer number of seconds.");
     }
+    return String(parseInt(value, 10));
 }
 /**
  * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
@@ -135,8 +139,9 @@ function run() {
                 (0, core_1.info)(`Duration: ${config.duration}s (from the 'duration' input).`);
             }
             else if (argsDurationIndex !== -1) {
-                const argsDuration = (_a = args[argsDurationIndex + 1]) !== null && _a !== void 0 ? _a : "";
-                validateDuration(argsDuration, "--duration in args");
+                const argsDuration = validateDuration((_a = args[argsDurationIndex + 1]) !== null && _a !== void 0 ? _a : "", "--duration in args");
+                // Write the normalized value back so the CLI gets a clean duration.
+                args[argsDurationIndex + 1] = argsDuration;
                 (0, core_1.info)(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
             }
             else {
