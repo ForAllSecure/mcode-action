@@ -51,10 +51,17 @@ function getConfig() {
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
+    // Optional typed run duration (in seconds). When set it must be a positive
+    // integer; it takes precedence over any `--duration` passed via `args`.
+    const rawDuration = (0, core_1.getInput)("duration");
+    const duration = rawDuration
+        ? validateDuration(rawDuration, "duration input")
+        : "";
     return {
         githubToken,
         mayhemToken: (0, core_1.getInput)("mayhem-token") || githubToken,
         packagePath: (0, core_1.getInput)("package") || ".",
+        duration,
         sarifOutputDir: (0, core_1.getInput)("sarif-output") || "",
         junitOutputDir: (0, core_1.getInput)("junit-output") || "",
         coverageOutputDir: (0, core_1.getInput)("coverage-output") || "",
@@ -74,6 +81,24 @@ function getConfig() {
     };
 }
 /**
+ * Validates a run duration (in seconds) and returns it in canonical form. A
+ * duration must be a positive integer; anything else (a decimal like "30.5", a
+ * suffix like "20m", zero, a missing value) is rejected, since the CLI would
+ * otherwise treat a malformed duration as an unbounded run. Leading zeros are
+ * stripped ("000000120" -> "120") so the CLI receives a clean value. Throws
+ * with a message naming `source` on invalid input.
+ * @param value the raw duration string to validate.
+ * @param source human-readable origin of the value, used in the error message.
+ * @return the duration normalized to its canonical decimal integer string.
+ */
+function validateDuration(value, source) {
+    if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
+        throw Error(`invalid duration '${value}' (${source}): ` +
+            "it must be a positive integer number of seconds.");
+    }
+    return String(parseInt(value, 10));
+}
+/**
  * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
  * path to the downloaded CLI.
  * @param url the base URL of the Mayhem cluster, such as "https://app.mayhem.security".
@@ -91,15 +116,37 @@ function downloadCli(url, os) {
 /** Mapping action arguments to CLI arguments and completing a run */
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             // Validate the action inputs and create a Config object from them.
             const config = getConfig();
             // Download the mCode CLI for Linux.
             const cli = yield downloadCli(mayhemUrl, CliOsPath.Linux);
             const args = ((0, core_1.getInput)("args") || "").split(" ");
-            // defaults next
-            if (!args.includes("--duration")) {
+            // Resolve the effective run duration. Precedence:
+            //   1. the typed `duration` input,
+            //   2. a `--duration` passed inside `args`,
+            //   3. the documented default of 60 seconds.
+            const argsDurationIndex = args.indexOf("--duration");
+            if (config.duration) {
+                if (argsDurationIndex !== -1) {
+                    // The typed input wins over a --duration smuggled through args.
+                    args.splice(argsDurationIndex, 2, "--duration", config.duration);
+                }
+                else {
+                    args.push("--duration", config.duration);
+                }
+                (0, core_1.info)(`Duration: ${config.duration}s (from the 'duration' input).`);
+            }
+            else if (argsDurationIndex !== -1) {
+                const argsDuration = validateDuration((_a = args[argsDurationIndex + 1]) !== null && _a !== void 0 ? _a : "", "--duration in args");
+                // Write the normalized value back so the CLI gets a clean duration.
+                args[argsDurationIndex + 1] = argsDuration;
+                (0, core_1.info)(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
+            }
+            else {
                 args.push("--duration", "60");
+                (0, core_1.info)("Duration: 60s (default).");
             }
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
