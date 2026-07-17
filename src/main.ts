@@ -65,11 +65,8 @@ function getConfig(): Config {
   // Optional typed run duration (in seconds). When set it must be a positive
   // integer; it takes precedence over any `--duration` passed via `args`.
   const duration = getInput("duration");
-  if (duration && (!/^\d+$/.test(duration) || parseInt(duration, 10) <= 0)) {
-    throw Error(
-      `Invalid 'duration' input: '${duration}'. ` +
-        "It must be a positive integer number of seconds.",
-    );
+  if (duration) {
+    validateDuration(duration, "duration input");
   }
 
   return {
@@ -94,6 +91,23 @@ function getConfig(): Config {
       : process.env["GITHUB_SHA"] || "unknown",
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
+}
+
+/**
+ * Validates a run duration (in seconds). A duration must be a positive integer;
+ * anything else (a decimal like "30.5", a suffix like "20m", zero, a missing
+ * value) is rejected, since the CLI would otherwise treat a malformed duration
+ * as an unbounded run. Throws with a message naming `source` on invalid input.
+ * @param value the raw duration string to validate.
+ * @param source human-readable origin of the value, used in the error message.
+ */
+function validateDuration(value: string, source: string): void {
+  if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
+    throw Error(
+      `invalid duration '${value}' (${source}): ` +
+        "it must be a positive integer number of seconds.",
+    );
+  }
 }
 
 /**
@@ -135,9 +149,9 @@ async function run(): Promise<void> {
       }
       info(`Duration: ${config.duration}s (from the 'duration' input).`);
     } else if (argsDurationIndex !== -1) {
-      info(
-        `Duration: ${args[argsDurationIndex + 1]}s (from '--duration' in 'args').`,
-      );
+      const argsDuration = args[argsDurationIndex + 1] ?? "";
+      validateDuration(argsDuration, "--duration in args");
+      info(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
     } else {
       args.push("--duration", "60");
       info("Duration: 60s (default).");

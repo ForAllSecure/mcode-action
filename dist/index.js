@@ -54,9 +54,8 @@ function getConfig() {
     // Optional typed run duration (in seconds). When set it must be a positive
     // integer; it takes precedence over any `--duration` passed via `args`.
     const duration = (0, core_1.getInput)("duration");
-    if (duration && (!/^\d+$/.test(duration) || parseInt(duration, 10) <= 0)) {
-        throw Error(`Invalid 'duration' input: '${duration}'. ` +
-            "It must be a positive integer number of seconds.");
+    if (duration) {
+        validateDuration(duration, "duration input");
     }
     return {
         githubToken,
@@ -82,6 +81,20 @@ function getConfig() {
     };
 }
 /**
+ * Validates a run duration (in seconds). A duration must be a positive integer;
+ * anything else (a decimal like "30.5", a suffix like "20m", zero, a missing
+ * value) is rejected, since the CLI would otherwise treat a malformed duration
+ * as an unbounded run. Throws with a message naming `source` on invalid input.
+ * @param value the raw duration string to validate.
+ * @param source human-readable origin of the value, used in the error message.
+ */
+function validateDuration(value, source) {
+    if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
+        throw Error(`invalid duration '${value}' (${source}): ` +
+            "it must be a positive integer number of seconds.");
+    }
+}
+/**
  * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
  * path to the downloaded CLI.
  * @param url the base URL of the Mayhem cluster, such as "https://app.mayhem.security".
@@ -99,6 +112,7 @@ function downloadCli(url, os) {
 /** Mapping action arguments to CLI arguments and completing a run */
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             // Validate the action inputs and create a Config object from them.
             const config = getConfig();
@@ -121,7 +135,9 @@ function run() {
                 (0, core_1.info)(`Duration: ${config.duration}s (from the 'duration' input).`);
             }
             else if (argsDurationIndex !== -1) {
-                (0, core_1.info)(`Duration: ${args[argsDurationIndex + 1]}s (from '--duration' in 'args').`);
+                const argsDuration = (_a = args[argsDurationIndex + 1]) !== null && _a !== void 0 ? _a : "";
+                validateDuration(argsDuration, "--duration in args");
+                (0, core_1.info)(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
             }
             else {
                 args.push("--duration", "60");
