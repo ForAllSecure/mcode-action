@@ -32,8 +32,22 @@ var CliOsPath;
     CliOsPath["MacOS"] = "Darwin/mayhem.pkg";
     CliOsPath["Windows"] = "Windows/mayhem.exe";
 })(CliOsPath || (CliOsPath = {}));
+/**
+ * Strips a "refs/heads/" prefix only if present, instead of unconditionally
+ * slicing it off - GITHUB_REF_NAME is already short, so the old unconditional
+ * slice chopped real characters off the branch name (could crash the mayhem
+ * CLI's arg parser if that left a leading "-", e.g. "delta-repro-...").
+ */
+function resolveBranchName(refName) {
+    if (!refName) {
+        return "main";
+    }
+    const refsHeadsPrefix = "refs/heads/";
+    return refName.startsWith(refsHeadsPrefix)
+        ? refName.slice(refsHeadsPrefix.length)
+        : refName;
+}
 function getConfig() {
-    var _a;
     const githubToken = (0, core_1.getInput)("github-token", {
         required: true,
     });
@@ -73,7 +87,7 @@ function getConfig() {
         ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
         branchName: eventPullRequest
             ? eventPullRequest.head.ref
-            : ((_a = process.env["GITHUB_REF_NAME"]) === null || _a === void 0 ? void 0 : _a.slice("refs/heads/".length)) || "main",
+            : resolveBranchName(process.env["GITHUB_REF_NAME"]),
         revision: eventPullRequest
             ? eventPullRequest.head.sha
             : process.env["GITHUB_SHA"] || "unknown",

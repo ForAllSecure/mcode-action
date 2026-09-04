@@ -38,6 +38,22 @@ type Config = {
   mergeBaseBranchName: string;
 };
 
+/**
+ * Strips a "refs/heads/" prefix only if present, instead of unconditionally
+ * slicing it off - GITHUB_REF_NAME is already short, so the old unconditional
+ * slice chopped real characters off the branch name (could crash the mayhem
+ * CLI's arg parser if that left a leading "-", e.g. "delta-repro-...").
+ */
+function resolveBranchName(refName: string | undefined): string {
+  if (!refName) {
+    return "main";
+  }
+  const refsHeadsPrefix = "refs/heads/";
+  return refName.startsWith(refsHeadsPrefix)
+    ? refName.slice(refsHeadsPrefix.length)
+    : refName;
+}
+
 function getConfig(): Config {
   const githubToken: string = getInput("github-token", {
     required: true,
@@ -85,7 +101,7 @@ function getConfig(): Config {
     ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
     branchName: eventPullRequest
       ? eventPullRequest.head.ref
-      : process.env["GITHUB_REF_NAME"]?.slice("refs/heads/".length) || "main",
+      : resolveBranchName(process.env["GITHUB_REF_NAME"]),
     revision: eventPullRequest
       ? eventPullRequest.head.sha
       : process.env["GITHUB_SHA"] || "unknown",
