@@ -52,16 +52,22 @@ describe("checkedOutRevision", () => {
     })
       .toString()
       .trim();
-    expect(checkedOutRevision(join(__dirname, ".."))).toBe(head);
+    expect(checkedOutRevision(join(__dirname, ".."))).toEqual({ sha: head });
   });
 
-  test("is undefined outside a git checkout", () => {
-    expect(
-      checkedOutRevision(mkdtempSync(join(tmpdir(), "no-git-"))),
-    ).toBeUndefined();
+  test("outside a git checkout it reports git's own error instead of swallowing it", () => {
+    const r = checkedOutRevision(mkdtempSync(join(tmpdir(), "no-git-")));
+    expect(r.sha).toBeUndefined();
+    expect(r.error).toMatch(
+      /git rev-parse HEAD in .* failed: .*not a git repository/i,
+    );
   });
 
-  test("is undefined for a directory that does not exist", () => {
-    expect(checkedOutRevision("/nonexistent/path")).toBeUndefined();
+  test("a directory that does not exist is an error too, never a throw", () => {
+    const r = checkedOutRevision("/nonexistent/path");
+    expect(r.sha).toBeUndefined();
+    expect(r.error).toMatch(
+      /^git rev-parse HEAD in '\/nonexistent\/path' failed: /,
+    );
   });
 });
