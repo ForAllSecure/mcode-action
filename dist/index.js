@@ -74,7 +74,16 @@ function getConfig() {
         ? validateDuration(rawDuration, "duration input")
         : "";
     const packagePath = (0, core_1.getInput)("package") || ".";
-    const { revision, source: revisionSource } = (0, revision_1.resolveRevision)((0, core_1.getInput)("revision"), (_a = eventPullRequest === null || eventPullRequest === void 0 ? void 0 : eventPullRequest.head) === null || _a === void 0 ? void 0 : _a.sha, (0, revision_1.checkedOutRevision)(packagePath), process.env["GITHUB_SHA"]);
+    const checkedOut = (0, revision_1.checkedOutRevision)(packagePath);
+    const { revision, source: revisionSource } = (0, revision_1.resolveRevision)((0, core_1.getInput)("revision"), (_a = eventPullRequest === null || eventPullRequest === void 0 ? void 0 : eventPullRequest.head) === null || _a === void 0 ? void 0 : _a.sha, checkedOut.sha, process.env["GITHUB_SHA"]);
+    if (revisionSource === "GITHUB_SHA" && checkedOut.error) {
+        // The one fallback that can label a run with a commit that was not built:
+        // say so where the workflow author will see it, not just in the log.
+        (0, core_1.warning)(`Could not read the checked-out commit (${checkedOut.error}); ` +
+            `recording GITHUB_SHA ${revision} as the run's revision. If this job ` +
+            `builds a different commit than the workflow run started from, pass ` +
+            `it via the 'revision' input.`);
+    }
     return {
         githubToken,
         mayhemToken: (0, core_1.getInput)("mayhem-token") || githubToken,
@@ -313,23 +322,29 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveRevision = exports.checkedOutRevision = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 /**
- * The commit the workspace actually has checked out, or undefined when `cwd`
- * is not inside a git checkout (or git is unavailable). Never throws.
+ * The commit the workspace actually has checked out. Never throws: when `cwd`
+ * is not inside a git checkout, git is unavailable, or the answer is not a
+ * commit id, `error` says why so the caller can warn instead of silently
+ * falling back to GITHUB_SHA.
  * @param cwd the directory to ask git about, normally the package path.
- * @return the 40-hex commit id of HEAD, or undefined.
+ * @return `{sha}` with the 40-hex commit id of HEAD, or `{error}`.
  */
 function checkedOutRevision(cwd) {
     try {
         const out = (0, child_process_1.execFileSync)("git", ["rev-parse", "HEAD"], {
             cwd,
-            stdio: ["ignore", "pipe", "ignore"],
+            stdio: ["ignore", "pipe", "pipe"],
         })
             .toString()
             .trim();
-        return /^[0-9a-f]{40}$/.test(out) ? out : undefined;
+        return /^[0-9a-f]{40}$/.test(out)
+            ? { sha: out }
+            : { error: `git rev-parse HEAD in '${cwd}' returned '${out}'` };
     }
-    catch (_a) {
-        return undefined;
+    catch (err) {
+        const e = err;
+        const detail = (e.stderr ? e.stderr.toString().trim() : "") || e.message || String(err);
+        return { error: `git rev-parse HEAD in '${cwd}' failed: ${detail}` };
     }
 }
 exports.checkedOutRevision = checkedOutRevision;

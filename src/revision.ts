@@ -8,23 +8,33 @@ export type RevisionSource =
   | "GITHUB_SHA"
   | "unknown";
 
+/** What git said about the workspace: the commit at HEAD, or why it could not be read. */
+export type CheckedOut = { sha?: string; error?: string };
+
 /**
- * The commit the workspace actually has checked out, or undefined when `cwd`
- * is not inside a git checkout (or git is unavailable). Never throws.
+ * The commit the workspace actually has checked out. Never throws: when `cwd`
+ * is not inside a git checkout, git is unavailable, or the answer is not a
+ * commit id, `error` says why so the caller can warn instead of silently
+ * falling back to GITHUB_SHA.
  * @param cwd the directory to ask git about, normally the package path.
- * @return the 40-hex commit id of HEAD, or undefined.
+ * @return `{sha}` with the 40-hex commit id of HEAD, or `{error}`.
  */
-export function checkedOutRevision(cwd: string): string | undefined {
+export function checkedOutRevision(cwd: string): CheckedOut {
   try {
     const out = execFileSync("git", ["rev-parse", "HEAD"], {
       cwd,
-      stdio: ["ignore", "pipe", "ignore"],
+      stdio: ["ignore", "pipe", "pipe"],
     })
       .toString()
       .trim();
-    return /^[0-9a-f]{40}$/.test(out) ? out : undefined;
-  } catch {
-    return undefined;
+    return /^[0-9a-f]{40}$/.test(out)
+      ? { sha: out }
+      : { error: `git rev-parse HEAD in '${cwd}' returned '${out}'` };
+  } catch (err: unknown) {
+    const e = err as { stderr?: Buffer | string; message?: string };
+    const detail =
+      (e.stderr ? e.stderr.toString().trim() : "") || e.message || String(err);
+    return { error: `git rev-parse HEAD in '${cwd}' failed: ${detail}` };
   }
 }
 
