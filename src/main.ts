@@ -3,6 +3,11 @@ import { exec } from "@actions/exec";
 import { context as githubContext } from "@actions/github";
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
+import {
+  checkedOutRevision,
+  resolveRevision,
+  RevisionSource,
+} from "./revision";
 
 const mayhemUrl: string =
   getInput("mayhem-url") || "https://app.mayhem.security";
@@ -35,6 +40,7 @@ type Config = {
   ciUrl: string;
   branchName: string;
   revision: string;
+  revisionSource: RevisionSource;
   mergeBaseBranchName: string;
 };
 
@@ -85,10 +91,18 @@ function getConfig(): Config {
     ? validateDuration(rawDuration, "duration input")
     : "";
 
+  const packagePath = getInput("package") || ".";
+  const { revision, source: revisionSource } = resolveRevision(
+    getInput("revision"),
+    eventPullRequest?.head?.sha,
+    checkedOutRevision(packagePath),
+    process.env["GITHUB_SHA"],
+  );
+
   return {
     githubToken,
     mayhemToken: getInput("mayhem-token") || githubToken,
-    packagePath: getInput("package") || ".",
+    packagePath,
     duration,
     sarifOutputDir: getInput("sarif-output") || "",
     junitOutputDir: getInput("junit-output") || "",
@@ -102,9 +116,8 @@ function getConfig(): Config {
     branchName: eventPullRequest
       ? eventPullRequest.head.ref
       : resolveBranchName(process.env["GITHUB_REF_NAME"]),
-    revision: eventPullRequest
-      ? eventPullRequest.head.sha
-      : process.env["GITHUB_SHA"] || "unknown",
+    revision,
+    revisionSource,
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
 }
@@ -180,6 +193,7 @@ async function run(): Promise<void> {
       args.push("--duration", "60");
       info("Duration: 60s (default).");
     }
+    info(`Revision: ${config.revision} (from ${config.revisionSource}).`);
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
