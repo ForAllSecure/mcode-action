@@ -1,8 +1,19 @@
-import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
+import {
+  getInput,
+  getBooleanInput,
+  info,
+  setFailed,
+  warning,
+} from "@actions/core";
 import { exec } from "@actions/exec";
 import { context as githubContext } from "@actions/github";
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
+import {
+  checkedOutRevision,
+  resolveRevision,
+  RevisionSource,
+} from "./revision";
 
 const mayhemUrl: string =
   getInput("mayhem-url") || "https://app.mayhem.security";
@@ -35,6 +46,7 @@ type Config = {
   ciUrl: string;
   branchName: string;
   revision: string;
+  revisionSource: RevisionSource;
   mergeBaseBranchName: string;
 };
 
@@ -85,10 +97,29 @@ function getConfig(): Config {
     ? validateDuration(rawDuration, "duration input")
     : "";
 
+  const packagePath = getInput("package") || ".";
+  const checkedOut = checkedOutRevision(packagePath);
+  const { revision, source: revisionSource } = resolveRevision(
+    getInput("revision"),
+    eventPullRequest?.head?.sha,
+    checkedOut.sha,
+    process.env["GITHUB_SHA"],
+  );
+  if (revisionSource === "GITHUB_SHA" && checkedOut.error) {
+    // The one fallback that can label a run with a commit that was not built:
+    // say so where the workflow author will see it, not just in the log.
+    warning(
+      `Could not read the checked-out commit (${checkedOut.error}); ` +
+        `recording GITHUB_SHA ${revision} as the run's revision. If this job ` +
+        `builds a different commit than the workflow run started from, pass ` +
+        `it via the 'revision' input.`,
+    );
+  }
+
   return {
     githubToken,
     mayhemToken: getInput("mayhem-token") || githubToken,
-    packagePath: getInput("package") || ".",
+    packagePath,
     duration,
     sarifOutputDir: getInput("sarif-output") || "",
     junitOutputDir: getInput("junit-output") || "",
@@ -102,9 +133,8 @@ function getConfig(): Config {
     branchName: eventPullRequest
       ? eventPullRequest.head.ref
       : resolveBranchName(process.env["GITHUB_REF_NAME"]),
-    revision: eventPullRequest
-      ? eventPullRequest.head.sha
-      : process.env["GITHUB_SHA"] || "unknown",
+    revision,
+    revisionSource,
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
 }
@@ -180,6 +210,7 @@ async function run(): Promise<void> {
       args.push("--duration", "60");
       info("Duration: 60s (default).");
     }
+    info(`Revision: ${config.revision} (from ${config.revisionSource}).`);
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
