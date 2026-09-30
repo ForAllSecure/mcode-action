@@ -127,7 +127,7 @@ function getConfig(): Config {
     failOnDefects: getBooleanInput("fail-on-defects") || false,
     verbosity: getInput("verbosity") || "info",
     owner: getInput("owner").toLowerCase(),
-    project: (getInput("project") || repo).toLowerCase(),
+    project: (getInput("project") || repo).toLowerCase().replace(/[^a-z0-9-]/g, "-"),
     repo,
     ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
     branchName: eventPullRequest
