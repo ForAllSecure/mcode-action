@@ -23,7 +23,9 @@ describe("mayhemProjectSlug", () => {
   });
 
   test("a dot becomes a dash", () => {
-    expect(mayhemProjectSlug("savantenvs/gjson.rs")).toBe("savantenvs/gjson-rs");
+    expect(mayhemProjectSlug("savantenvs/gjson.rs")).toBe(
+      "savantenvs/gjson-rs",
+    );
     expect(mayhemProjectSlug("metapensiero.pj")).toBe("metapensiero-pj");
   });
 

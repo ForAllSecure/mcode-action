@@ -14,6 +14,7 @@ import {
   resolveRevision,
   RevisionSource,
 } from "./revision";
+import { mayhemProjectSlug } from "./project";
 
 const mayhemUrl: string =
   getInput("mayhem-url") || "https://app.mayhem.security";
@@ -116,6 +117,15 @@ function getConfig(): Config {
     );
   }
 
+  const requestedProject = getInput("project") || repo;
+  const project = mayhemProjectSlug(requestedProject);
+  if (project !== requestedProject.toLowerCase()) {
+    info(
+      `Project: '${requestedProject}' is '${project}' in Mayhem ` +
+        `(characters outside [a-z0-9-] become '-').`,
+    );
+  }
+
   return {
     githubToken,
     mayhemToken: getInput("mayhem-token") || githubToken,
@@ -127,7 +137,7 @@ function getConfig(): Config {
     failOnDefects: getBooleanInput("fail-on-defects") || false,
     verbosity: getInput("verbosity") || "info",
     owner: getInput("owner").toLowerCase(),
-    project: (getInput("project") || repo).toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+    project,
     repo,
     ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
     branchName: eventPullRequest
