@@ -1,8 +1,20 @@
-import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
+import {
+  getInput,
+  getBooleanInput,
+  info,
+  setFailed,
+  warning,
+} from "@actions/core";
 import { exec } from "@actions/exec";
 import { context as githubContext } from "@actions/github";
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
+import {
+  checkedOutRevision,
+  resolveRevision,
+  RevisionSource,
+} from "./revision";
+import { mayhemProjectSlug } from "./project";
 
 const mayhemUrl: string =
   getInput("mayhem-url") || "https://app.mayhem.security";
@@ -22,6 +34,7 @@ type Config = {
   mayhemToken: string;
 
   packagePath: string;
+  duration: string;
   sarifOutputDir: string;
   junitOutputDir: string;
   coverageOutputDir: string;
@@ -34,8 +47,25 @@ type Config = {
   ciUrl: string;
   branchName: string;
   revision: string;
+  revisionSource: RevisionSource;
   mergeBaseBranchName: string;
 };
+
+/**
+ * Strips a "refs/heads/" prefix only if present, instead of unconditionally
+ * slicing it off - GITHUB_REF_NAME is already short, so the old unconditional
+ * slice chopped real characters off the branch name (could crash the mayhem
+ * CLI's arg parser if that left a leading "-", e.g. "delta-repro-...").
+ */
+function resolveBranchName(refName: string | undefined): string {
+  if (!refName) {
+    return "main";
+  }
+  const refsHeadsPrefix = "refs/heads/";
+  return refName.startsWith(refsHeadsPrefix)
+    ? refName.slice(refsHeadsPrefix.length)
+    : refName;
+}
 
 function getConfig(): Config {
   const githubToken: string = getInput("github-token", {
@@ -61,27 +91,83 @@ function getConfig(): Config {
   const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
   const eventPullRequest = event.pull_request;
 
+  // Optional typed run duration (in seconds). When set it must be a positive
+  // integer; it takes precedence over any `--duration` passed via `args`.
+  const rawDuration = getInput("duration");
+  const duration = rawDuration
+    ? validateDuration(rawDuration, "duration input")
+    : "";
+
+  const packagePath = getInput("package") || ".";
+  const checkedOut = checkedOutRevision(packagePath);
+  const { revision, source: revisionSource } = resolveRevision(
+    getInput("revision"),
+    eventPullRequest?.head?.sha,
+    checkedOut.sha,
+    process.env["GITHUB_SHA"],
+  );
+  if (revisionSource === "GITHUB_SHA" && checkedOut.error) {
+    // The one fallback that can label a run with a commit that was not built:
+    // say so where the workflow author will see it, not just in the log.
+    warning(
+      `Could not read the checked-out commit (${checkedOut.error}); ` +
+        `recording GITHUB_SHA ${revision} as the run's revision. If this job ` +
+        `builds a different commit than the workflow run started from, pass ` +
+        `it via the 'revision' input.`,
+    );
+  }
+
+  const requestedProject = getInput("project") || repo;
+  const project = mayhemProjectSlug(requestedProject);
+  if (project !== requestedProject.toLowerCase()) {
+    info(
+      `Project: '${requestedProject}' is '${project}' in Mayhem ` +
+        `(characters outside [a-z0-9-] become '-').`,
+    );
+  }
+
   return {
     githubToken,
     mayhemToken: getInput("mayhem-token") || githubToken,
-    packagePath: getInput("package") || ".",
+    packagePath,
+    duration,
     sarifOutputDir: getInput("sarif-output") || "",
     junitOutputDir: getInput("junit-output") || "",
     coverageOutputDir: getInput("coverage-output") || "",
     failOnDefects: getBooleanInput("fail-on-defects") || false,
     verbosity: getInput("verbosity") || "info",
     owner: getInput("owner").toLowerCase(),
-    project: (getInput("project") || repo).toLowerCase(),
+    project,
     repo,
     ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
     branchName: eventPullRequest
       ? eventPullRequest.head.ref
-      : process.env["GITHUB_REF_NAME"]?.slice("refs/heads/".length) || "main",
-    revision: eventPullRequest
-      ? eventPullRequest.head.sha
-      : process.env["GITHUB_SHA"] || "unknown",
+      : resolveBranchName(process.env["GITHUB_REF_NAME"]),
+    revision,
+    revisionSource,
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
+}
+
+/**
+ * Validates a run duration (in seconds) and returns it in canonical form. A
+ * duration must be a positive integer; anything else (a decimal like "30.5", a
+ * suffix like "20m", zero, a missing value) is rejected, since the CLI would
+ * otherwise treat a malformed duration as an unbounded run. Leading zeros are
+ * stripped ("000000120" -> "120") so the CLI receives a clean value. Throws
+ * with a message naming `source` on invalid input.
+ * @param value the raw duration string to validate.
+ * @param source human-readable origin of the value, used in the error message.
+ * @return the duration normalized to its canonical decimal integer string.
+ */
+function validateDuration(value: string, source: string): string {
+  if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
+    throw Error(
+      `invalid duration '${value}' (${source}): ` +
+        "it must be a positive integer number of seconds.",
+    );
+  }
+  return String(parseInt(value, 10));
 }
 
 /**
@@ -109,10 +195,32 @@ async function run(): Promise<void> {
 
     const args: string[] = (getInput("args") || "").split(" ");
 
-    // defaults next
-    if (!args.includes("--duration")) {
+    // Resolve the effective run duration. Precedence:
+    //   1. the typed `duration` input,
+    //   2. a `--duration` passed inside `args`,
+    //   3. the documented default of 60 seconds.
+    const argsDurationIndex = args.indexOf("--duration");
+    if (config.duration) {
+      if (argsDurationIndex !== -1) {
+        // The typed input wins over a --duration smuggled through args.
+        args.splice(argsDurationIndex, 2, "--duration", config.duration);
+      } else {
+        args.push("--duration", config.duration);
+      }
+      info(`Duration: ${config.duration}s (from the 'duration' input).`);
+    } else if (argsDurationIndex !== -1) {
+      const argsDuration = validateDuration(
+        args[argsDurationIndex + 1] ?? "",
+        "--duration in args",
+      );
+      // Write the normalized value back so the CLI gets a clean duration.
+      args[argsDurationIndex + 1] = argsDuration;
+      info(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
+    } else {
       args.push("--duration", "60");
+      info("Duration: 60s (default).");
     }
+    info(`Revision: ${config.revision} (from ${config.revisionSource}).`);
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
@@ -218,7 +326,14 @@ async function run(): Promise<void> {
 
     process.env["MAYHEM_TOKEN"] = config.mayhemToken;
     process.env["MAYHEM_URL"] = mayhemUrl;
-    process.env["MAYHEM_PROJECT"] = config.repo;
+    // Match the --owner/--project flags passed to `mayhem run` above, so the
+    // wait/show/download subcommands (which only get --owner explicitly)
+    // resolve the same project instead of falling back to the GitHub repo.
+    // `project` may already be a fully-qualified "owner/project" reference,
+    // in which case `owner` shouldn't be prepended again.
+    process.env["MAYHEM_PROJECT"] = config.project.includes("/")
+      ? config.project
+      : `${config.owner}/${config.project}`;
 
     // Start fuzzing
     const cliRunning = exec("bash", ["-c", script], {

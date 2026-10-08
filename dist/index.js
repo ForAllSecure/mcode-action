@@ -21,6 +21,8 @@ const exec_1 = __nccwpck_require__(1514);
 const github_1 = __nccwpck_require__(5438);
 const tool_cache_1 = __nccwpck_require__(7784);
 const fs_1 = __nccwpck_require__(7147);
+const revision_1 = __nccwpck_require__(5517);
+const project_1 = __nccwpck_require__(9389);
 const mayhemUrl = (0, core_1.getInput)("mayhem-url") || "https://app.mayhem.security";
 /**
  * Operating systems that an mCode CLI is available for, mapped to the URL path it can be
@@ -32,6 +34,21 @@ var CliOsPath;
     CliOsPath["MacOS"] = "Darwin/mayhem.pkg";
     CliOsPath["Windows"] = "Windows/mayhem.exe";
 })(CliOsPath || (CliOsPath = {}));
+/**
+ * Strips a "refs/heads/" prefix only if present, instead of unconditionally
+ * slicing it off - GITHUB_REF_NAME is already short, so the old unconditional
+ * slice chopped real characters off the branch name (could crash the mayhem
+ * CLI's arg parser if that left a leading "-", e.g. "delta-repro-...").
+ */
+function resolveBranchName(refName) {
+    if (!refName) {
+        return "main";
+    }
+    const refsHeadsPrefix = "refs/heads/";
+    return refName.startsWith(refsHeadsPrefix)
+        ? refName.slice(refsHeadsPrefix.length)
+        : refName;
+}
 function getConfig() {
     var _a;
     const githubToken = (0, core_1.getInput)("github-token", {
@@ -51,27 +68,68 @@ function getConfig() {
     const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
     const event = JSON.parse((0, fs_1.readFileSync)(eventPath, "utf-8")) || {};
     const eventPullRequest = event.pull_request;
+    // Optional typed run duration (in seconds). When set it must be a positive
+    // integer; it takes precedence over any `--duration` passed via `args`.
+    const rawDuration = (0, core_1.getInput)("duration");
+    const duration = rawDuration
+        ? validateDuration(rawDuration, "duration input")
+        : "";
+    const packagePath = (0, core_1.getInput)("package") || ".";
+    const checkedOut = (0, revision_1.checkedOutRevision)(packagePath);
+    const { revision, source: revisionSource } = (0, revision_1.resolveRevision)((0, core_1.getInput)("revision"), (_a = eventPullRequest === null || eventPullRequest === void 0 ? void 0 : eventPullRequest.head) === null || _a === void 0 ? void 0 : _a.sha, checkedOut.sha, process.env["GITHUB_SHA"]);
+    if (revisionSource === "GITHUB_SHA" && checkedOut.error) {
+        // The one fallback that can label a run with a commit that was not built:
+        // say so where the workflow author will see it, not just in the log.
+        (0, core_1.warning)(`Could not read the checked-out commit (${checkedOut.error}); ` +
+            `recording GITHUB_SHA ${revision} as the run's revision. If this job ` +
+            `builds a different commit than the workflow run started from, pass ` +
+            `it via the 'revision' input.`);
+    }
+    const requestedProject = (0, core_1.getInput)("project") || repo;
+    const project = (0, project_1.mayhemProjectSlug)(requestedProject);
+    if (project !== requestedProject.toLowerCase()) {
+        (0, core_1.info)(`Project: '${requestedProject}' is '${project}' in Mayhem ` +
+            `(characters outside [a-z0-9-] become '-').`);
+    }
     return {
         githubToken,
         mayhemToken: (0, core_1.getInput)("mayhem-token") || githubToken,
-        packagePath: (0, core_1.getInput)("package") || ".",
+        packagePath,
+        duration,
         sarifOutputDir: (0, core_1.getInput)("sarif-output") || "",
         junitOutputDir: (0, core_1.getInput)("junit-output") || "",
         coverageOutputDir: (0, core_1.getInput)("coverage-output") || "",
         failOnDefects: (0, core_1.getBooleanInput)("fail-on-defects") || false,
         verbosity: (0, core_1.getInput)("verbosity") || "info",
         owner: (0, core_1.getInput)("owner").toLowerCase(),
-        project: ((0, core_1.getInput)("project") || repo).toLowerCase(),
+        project,
         repo,
         ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
         branchName: eventPullRequest
             ? eventPullRequest.head.ref
-            : ((_a = process.env["GITHUB_REF_NAME"]) === null || _a === void 0 ? void 0 : _a.slice("refs/heads/".length)) || "main",
-        revision: eventPullRequest
-            ? eventPullRequest.head.sha
-            : process.env["GITHUB_SHA"] || "unknown",
+            : resolveBranchName(process.env["GITHUB_REF_NAME"]),
+        revision,
+        revisionSource,
         mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
     };
+}
+/**
+ * Validates a run duration (in seconds) and returns it in canonical form. A
+ * duration must be a positive integer; anything else (a decimal like "30.5", a
+ * suffix like "20m", zero, a missing value) is rejected, since the CLI would
+ * otherwise treat a malformed duration as an unbounded run. Leading zeros are
+ * stripped ("000000120" -> "120") so the CLI receives a clean value. Throws
+ * with a message naming `source` on invalid input.
+ * @param value the raw duration string to validate.
+ * @param source human-readable origin of the value, used in the error message.
+ * @return the duration normalized to its canonical decimal integer string.
+ */
+function validateDuration(value, source) {
+    if (!/^\d+$/.test(value) || parseInt(value, 10) <= 0) {
+        throw Error(`invalid duration '${value}' (${source}): ` +
+            "it must be a positive integer number of seconds.");
+    }
+    return String(parseInt(value, 10));
 }
 /**
  * Downloads the mCode CLI from the given Mayhem cluster, marks it as executable, and returns the
@@ -91,16 +149,39 @@ function downloadCli(url, os) {
 /** Mapping action arguments to CLI arguments and completing a run */
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             // Validate the action inputs and create a Config object from them.
             const config = getConfig();
             // Download the mCode CLI for Linux.
             const cli = yield downloadCli(mayhemUrl, CliOsPath.Linux);
             const args = ((0, core_1.getInput)("args") || "").split(" ");
-            // defaults next
-            if (!args.includes("--duration")) {
-                args.push("--duration", "60");
+            // Resolve the effective run duration. Precedence:
+            //   1. the typed `duration` input,
+            //   2. a `--duration` passed inside `args`,
+            //   3. the documented default of 60 seconds.
+            const argsDurationIndex = args.indexOf("--duration");
+            if (config.duration) {
+                if (argsDurationIndex !== -1) {
+                    // The typed input wins over a --duration smuggled through args.
+                    args.splice(argsDurationIndex, 2, "--duration", config.duration);
+                }
+                else {
+                    args.push("--duration", config.duration);
+                }
+                (0, core_1.info)(`Duration: ${config.duration}s (from the 'duration' input).`);
             }
+            else if (argsDurationIndex !== -1) {
+                const argsDuration = validateDuration((_a = args[argsDurationIndex + 1]) !== null && _a !== void 0 ? _a : "", "--duration in args");
+                // Write the normalized value back so the CLI gets a clean duration.
+                args[argsDurationIndex + 1] = argsDuration;
+                (0, core_1.info)(`Duration: ${argsDuration}s (from '--duration' in 'args').`);
+            }
+            else {
+                args.push("--duration", "60");
+                (0, core_1.info)("Duration: 60s (default).");
+            }
+            (0, core_1.info)(`Revision: ${config.revision} (from ${config.revisionSource}).`);
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
@@ -199,7 +280,14 @@ function run() {
     `;
             process.env["MAYHEM_TOKEN"] = config.mayhemToken;
             process.env["MAYHEM_URL"] = mayhemUrl;
-            process.env["MAYHEM_PROJECT"] = config.repo;
+            // Match the --owner/--project flags passed to `mayhem run` above, so the
+            // wait/show/download subcommands (which only get --owner explicitly)
+            // resolve the same project instead of falling back to the GitHub repo.
+            // `project` may already be a fully-qualified "owner/project" reference,
+            // in which case `owner` shouldn't be prepended again.
+            process.env["MAYHEM_PROJECT"] = config.project.includes("/")
+                ? config.project
+                : `${config.owner}/${config.project}`;
             // Start fuzzing
             const cliRunning = (0, exec_1.exec)("bash", ["-c", script], {
                 ignoreReturnCode: true,
@@ -228,6 +316,115 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 9389:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.mayhemProjectSlug = void 0;
+/**
+ * The project name to hand Mayhem.
+ *
+ * Mayhem stores a project name with every character outside [a-z0-9-] turned
+ * into "-": a repository named `My_Project` becomes the project `my-project`.
+ * The `mayhem run` CLI and the project lookups accept either spelling, but a
+ * Mayhemfile's server-side test suite
+ * (`https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar`) is
+ * access-checked against the literal name, so a `MAYHEM_PROJECT` that still
+ * holds the `_` names a project the token cannot use and the run fails to start
+ * ("You do not have access to use a test suite from the project my_project").
+ *
+ * `name` is either a bare project name or the `owner/project` form
+ * (`GITHUB_REPOSITORY`, the default). Each segment is normalized on its own so
+ * the separator survives. GitHub owner names are already [A-Za-z0-9-], so only
+ * the case of the owner segment changes.
+ */
+function mayhemProjectSlug(name) {
+    return name
+        .toLowerCase()
+        .split("/")
+        .map((segment) => segment.replace(/[^a-z0-9-]/g, "-"))
+        .join("/");
+}
+exports.mayhemProjectSlug = mayhemProjectSlug;
+
+
+/***/ }),
+
+/***/ 5517:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.resolveRevision = exports.checkedOutRevision = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+/**
+ * The commit the workspace actually has checked out. Never throws: when `cwd`
+ * is not inside a git checkout, git is unavailable, or the answer is not a
+ * commit id, `error` says why so the caller can warn instead of silently
+ * falling back to GITHUB_SHA.
+ * @param cwd the directory to ask git about, normally the package path.
+ * @return `{sha}` with the 40-hex commit id of HEAD, or `{error}`.
+ */
+function checkedOutRevision(cwd) {
+    try {
+        const out = (0, child_process_1.execFileSync)("git", ["rev-parse", "HEAD"], {
+            cwd,
+            stdio: ["ignore", "pipe", "pipe"],
+        })
+            .toString()
+            .trim();
+        return /^[0-9a-f]{40}$/.test(out)
+            ? { sha: out }
+            : { error: `git rev-parse HEAD in '${cwd}' returned '${out}'` };
+    }
+    catch (err) {
+        const e = err;
+        const detail = (e.stderr ? e.stderr.toString().trim() : "") || e.message || String(err);
+        return { error: `git rev-parse HEAD in '${cwd}' failed: ${detail}` };
+    }
+}
+exports.checkedOutRevision = checkedOutRevision;
+/**
+ * Which commit to record on the Mayhem run, in order of trust:
+ *   1. an explicit `revision` input;
+ *   2. a pull request's head commit (a pull_request checkout is the merge
+ *      commit, and Mayhem should link the run to the branch head);
+ *   3. the commit the workspace has checked out;
+ *   4. GITHUB_SHA.
+ * GITHUB_SHA is fixed when the workflow run starts, so a job that checks out a
+ * different ref would otherwise label the run with a commit it did not build:
+ * a reusable workflow called with a freshly rebased commit, a workflow_run
+ * handler, an explicit `ref:` on actions/checkout. Preferring the checkout
+ * records what was actually fuzzed.
+ * @param explicit the `revision` input, possibly empty.
+ * @param pullRequestHeadSha `event.pull_request.head.sha` when the event is a pull request.
+ * @param checkedOut what `checkedOutRevision` found in the package path.
+ * @param envSha `process.env.GITHUB_SHA`.
+ * @return the revision to pass to the CLI and where it came from.
+ */
+function resolveRevision(explicit, pullRequestHeadSha, checkedOut, envSha) {
+    if (explicit) {
+        return { revision: explicit, source: "revision input" };
+    }
+    if (pullRequestHeadSha) {
+        return { revision: pullRequestHeadSha, source: "pull request head" };
+    }
+    if (checkedOut) {
+        return { revision: checkedOut, source: "checked-out HEAD" };
+    }
+    if (envSha) {
+        return { revision: envSha, source: "GITHUB_SHA" };
+    }
+    return { revision: "unknown", source: "unknown" };
+}
+exports.resolveRevision = resolveRevision;
 
 
 /***/ }),
