@@ -158,6 +158,7 @@ The mCode Action accepts the following inputs:
 |   | `mayhem-token` | string | Mayhem for Code account token. **Only required within** `mayhem.yml` **if overriding** `mayhem-url`. |
 |   | `duration` | number | Duration of the run in seconds. Takes precedence over any `--duration` passed via `args`. | 60 |
 |   | `args` | string | Additional CLI override [arguments](https://app.mayhem.security/docs/code-testing/reference/mayhem-cli-commands/#run) such as specifying the `--testsuite` directory path for a seed test suite. |
+|   | `revision` | string | Commit recorded on the run. Set it when the job builds a commit other than the one it checked out. | Pull request head on `pull_request` events, else the commit checked out under `package`, else `GITHUB_SHA` |
 |   | `sarif-output` | string | Path for generating a SARIF report output file. |
 |   | `junit-output` | string | Path for generating a jUnit report output file. |
 |   | `coverage-output` | string | Path for generating a coverage report output files. |

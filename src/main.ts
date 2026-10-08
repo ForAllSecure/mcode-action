@@ -1,8 +1,20 @@
-import { getInput, getBooleanInput, info, setFailed } from "@actions/core";
+import {
+  getInput,
+  getBooleanInput,
+  info,
+  setFailed,
+  warning,
+} from "@actions/core";
 import { exec } from "@actions/exec";
 import { context as githubContext } from "@actions/github";
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
+import {
+  checkedOutRevision,
+  resolveRevision,
+  RevisionSource,
+} from "./revision";
+import { mayhemProjectSlug } from "./project";
 
 const mayhemUrl: string =
   getInput("mayhem-url") || "https://app.mayhem.security";
@@ -35,8 +47,25 @@ type Config = {
   ciUrl: string;
   branchName: string;
   revision: string;
+  revisionSource: RevisionSource;
   mergeBaseBranchName: string;
 };
+
+/**
+ * Strips a "refs/heads/" prefix only if present, instead of unconditionally
+ * slicing it off - GITHUB_REF_NAME is already short, so the old unconditional
+ * slice chopped real characters off the branch name (could crash the mayhem
+ * CLI's arg parser if that left a leading "-", e.g. "delta-repro-...").
+ */
+function resolveBranchName(refName: string | undefined): string {
+  if (!refName) {
+    return "main";
+  }
+  const refsHeadsPrefix = "refs/heads/";
+  return refName.startsWith(refsHeadsPrefix)
+    ? refName.slice(refsHeadsPrefix.length)
+    : refName;
+}
 
 function getConfig(): Config {
   const githubToken: string = getInput("github-token", {
@@ -69,10 +98,38 @@ function getConfig(): Config {
     ? validateDuration(rawDuration, "duration input")
     : "";
 
+  const packagePath = getInput("package") || ".";
+  const checkedOut = checkedOutRevision(packagePath);
+  const { revision, source: revisionSource } = resolveRevision(
+    getInput("revision"),
+    eventPullRequest?.head?.sha,
+    checkedOut.sha,
+    process.env["GITHUB_SHA"],
+  );
+  if (revisionSource === "GITHUB_SHA" && checkedOut.error) {
+    // The one fallback that can label a run with a commit that was not built:
+    // say so where the workflow author will see it, not just in the log.
+    warning(
+      `Could not read the checked-out commit (${checkedOut.error}); ` +
+        `recording GITHUB_SHA ${revision} as the run's revision. If this job ` +
+        `builds a different commit than the workflow run started from, pass ` +
+        `it via the 'revision' input.`,
+    );
+  }
+
+  const requestedProject = getInput("project") || repo;
+  const project = mayhemProjectSlug(requestedProject);
+  if (project !== requestedProject.toLowerCase()) {
+    info(
+      `Project: '${requestedProject}' is '${project}' in Mayhem ` +
+        `(characters outside [a-z0-9-] become '-').`,
+    );
+  }
+
   return {
     githubToken,
     mayhemToken: getInput("mayhem-token") || githubToken,
-    packagePath: getInput("package") || ".",
+    packagePath,
     duration,
     sarifOutputDir: getInput("sarif-output") || "",
     junitOutputDir: getInput("junit-output") || "",
@@ -80,15 +137,14 @@ function getConfig(): Config {
     failOnDefects: getBooleanInput("fail-on-defects") || false,
     verbosity: getInput("verbosity") || "info",
     owner: getInput("owner").toLowerCase(),
-    project: (getInput("project") || repo).toLowerCase(),
+    project,
     repo,
     ciUrl: `${ghRepo}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
     branchName: eventPullRequest
       ? eventPullRequest.head.ref
-      : process.env["GITHUB_REF_NAME"]?.slice("refs/heads/".length) || "main",
-    revision: eventPullRequest
-      ? eventPullRequest.head.sha
-      : process.env["GITHUB_SHA"] || "unknown",
+      : resolveBranchName(process.env["GITHUB_REF_NAME"]),
+    revision,
+    revisionSource,
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
 }
@@ -164,6 +220,7 @@ async function run(): Promise<void> {
       args.push("--duration", "60");
       info("Duration: 60s (default).");
     }
+    info(`Revision: ${config.revision} (from ${config.revisionSource}).`);
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
