@@ -5,8 +5,10 @@ import { join } from "path";
 import {
   checkedOutRevision,
   firstParent,
+  resolveBuildId,
   resolveParentRevision,
   resolveRevision,
+  upstreamMergeBase,
 } from "../src/revision";
 
 const SHA_A = "a".repeat(40);
@@ -167,5 +169,77 @@ describe("firstParent", () => {
       firstParent(mkdtempSync(join(tmpdir(), "no-git-")), SHA_B),
     ).toBeUndefined();
     expect(firstParent("/nonexistent/path", SHA_B)).toBeUndefined();
+  });
+});
+
+describe("upstreamMergeBase", () => {
+  /** A fake GitHub client answering each route with `answers[route]`. */
+  const api = (answers: Record<string, unknown>) => ({
+    calls: [] as Record<string, string>[],
+    async request(route: string, params: Record<string, string>) {
+      this.calls.push({ route, ...params });
+      const answer = answers[route];
+      if (answer instanceof Error) throw answer;
+      return { data: answer };
+    },
+  });
+  const COMPARE = "GET /repos/{owner}/{repo}/compare/{basehead}";
+
+  test("a fork gives the merge base with the upstream default branch", async () => {
+    const gh = api({
+      "GET /repos/{owner}/{repo}": {
+        parent: { full_name: "tj/histo", default_branch: "master" },
+      },
+      [COMPARE]: { merge_base_commit: { sha: SHA_B } },
+    });
+    expect(await upstreamMergeBase(gh, "mayhemheroes/histo", SHA_A)).toEqual({
+      sha: SHA_B,
+    });
+    expect(gh.calls[1]).toEqual({
+      route: COMPARE,
+      owner: "mayhemheroes",
+      repo: "histo",
+      basehead: `tj:histo:master...${SHA_A}`,
+    });
+  });
+
+  test("a repository that is not a fork has none", async () => {
+    const gh = api({ "GET /repos/{owner}/{repo}": {} });
+    expect(await upstreamMergeBase(gh, "o/r", SHA_A)).toEqual({});
+  });
+
+  test("an API failure is an error, never a throw", async () => {
+    const gh = api({
+      "GET /repos/{owner}/{repo}": {
+        parent: { full_name: "u/r", default_branch: "main" },
+      },
+      [COMPARE]: new Error("Not Found"),
+    });
+    expect(await upstreamMergeBase(gh, "o/r", SHA_A)).toEqual({
+      error: "Not Found",
+    });
+  });
+});
+
+describe("resolveBuildId", () => {
+  test("an explicit build-id input wins over the merge base", () => {
+    expect(resolveBuildId("b42", SHA_A)).toEqual({
+      buildId: "b42",
+      source: "build-id input",
+    });
+  });
+
+  test("the upstream merge base otherwise", () => {
+    expect(resolveBuildId("", SHA_A)).toEqual({
+      buildId: SHA_A,
+      source: "upstream merge base",
+    });
+  });
+
+  test("none when neither is known", () => {
+    expect(resolveBuildId("", undefined)).toEqual({
+      buildId: "",
+      source: "none",
+    });
   });
 });

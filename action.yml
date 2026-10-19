@@ -53,6 +53,12 @@ inputs:
       Parent commit to record on the Mayhem run. Defaults to the first parent of the recorded 'revision', read
       from its commit object (this works in a shallow checkout). Left empty when that commit is not checked out.
     required: false
+  build-id:
+    description: >-
+      Build id to record on the Mayhem run. Defaults to the newest commit the recorded 'revision' shares with
+      the upstream repository this one was forked from (its merge base with the upstream default branch).
+      Left empty when the repository is not a fork.
+    required: false
   args:
     description: Command line arguments to override CLI behavior
     required: false

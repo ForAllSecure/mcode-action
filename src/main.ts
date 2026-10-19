@@ -6,7 +6,7 @@ import {
   warning,
 } from "@actions/core";
 import { exec } from "@actions/exec";
-import { context as githubContext } from "@actions/github";
+import { context as githubContext, getOctokit } from "@actions/github";
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 import {
@@ -14,8 +14,10 @@ import {
   firstParent,
   ParentRevisionSource,
   resolveParentRevision,
+  resolveBuildId,
   resolveRevision,
   RevisionSource,
+  upstreamMergeBase,
 } from "./revision";
 import { mayhemProjectSlug } from "./project";
 
@@ -248,6 +250,34 @@ async function run(): Promise<void> {
     args.push("--revision", config.revision);
     if (config.parentRevision) {
       args.push("--parent-revision", config.parentRevision);
+    }
+    if (!args.includes("--build-id") && !args.includes("-b")) {
+      const explicitBuildId = getInput("build-id");
+      const mergeBase = explicitBuildId
+        ? {}
+        : await upstreamMergeBase(
+            getOctokit(config.githubToken),
+            config.repo,
+            config.revision,
+          );
+      if (mergeBase.error) {
+        warning(
+          `Could not find the upstream commit of ${config.revision} ` +
+            `(${mergeBase.error}); not passing --build-id.`,
+        );
+      }
+      const { buildId, source: buildIdSource } = resolveBuildId(
+        explicitBuildId,
+        mergeBase.sha,
+      );
+      info(
+        buildId
+          ? `Build id: ${buildId} (from ${buildIdSource}).`
+          : "Build id: none (the repository is not a fork).",
+      );
+      if (buildId) {
+        args.push("--build-id", buildId);
+      }
     }
 
     const argsString = args.join(" ");
