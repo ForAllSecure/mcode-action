@@ -11,6 +11,9 @@ import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 import {
   checkedOutRevision,
+  firstParent,
+  ParentRevisionSource,
+  resolveParentRevision,
   resolveRevision,
   RevisionSource,
 } from "./revision";
@@ -48,6 +51,8 @@ type Config = {
   branchName: string;
   revision: string;
   revisionSource: RevisionSource;
+  parentRevision: string;
+  parentRevisionSource: ParentRevisionSource;
   mergeBaseBranchName: string;
 };
 
@@ -116,6 +121,11 @@ function getConfig(): Config {
         `it via the 'revision' input.`,
     );
   }
+  const { parentRevision, source: parentRevisionSource } =
+    resolveParentRevision(
+      getInput("parent-revision"),
+      firstParent(packagePath, revision),
+    );
 
   const requestedProject = getInput("project") || repo;
   const project = mayhemProjectSlug(requestedProject);
@@ -145,6 +155,8 @@ function getConfig(): Config {
       : resolveBranchName(process.env["GITHUB_REF_NAME"]),
     revision,
     revisionSource,
+    parentRevision,
+    parentRevisionSource,
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
 }
@@ -221,6 +233,11 @@ async function run(): Promise<void> {
       info("Duration: 60s (default).");
     }
     info(`Revision: ${config.revision} (from ${config.revisionSource}).`);
+    info(
+      config.parentRevision
+        ? `Parent revision: ${config.parentRevision} (from ${config.parentRevisionSource}).`
+        : "Parent revision: none (the recorded revision is not checked out, or is a root commit).",
+    );
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
@@ -229,6 +246,9 @@ async function run(): Promise<void> {
     args.push("--merge-base-branch-name", config.mergeBaseBranchName);
     args.push("--branch-name", config.branchName);
     args.push("--revision", config.revision);
+    if (config.parentRevision) {
+      args.push("--parent-revision", config.parentRevision);
+    }
 
     const argsString = args.join(" ");
 

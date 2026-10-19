@@ -85,6 +85,7 @@ function getConfig() {
             `builds a different commit than the workflow run started from, pass ` +
             `it via the 'revision' input.`);
     }
+    const { parentRevision, source: parentRevisionSource } = (0, revision_1.resolveParentRevision)((0, core_1.getInput)("parent-revision"), (0, revision_1.firstParent)(packagePath, revision));
     const requestedProject = (0, core_1.getInput)("project") || repo;
     const project = (0, project_1.mayhemProjectSlug)(requestedProject);
     if (project !== requestedProject.toLowerCase()) {
@@ -110,6 +111,8 @@ function getConfig() {
             : resolveBranchName(process.env["GITHUB_REF_NAME"]),
         revision,
         revisionSource,
+        parentRevision,
+        parentRevisionSource,
         mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
     };
 }
@@ -182,6 +185,9 @@ function run() {
                 (0, core_1.info)("Duration: 60s (default).");
             }
             (0, core_1.info)(`Revision: ${config.revision} (from ${config.revisionSource}).`);
+            (0, core_1.info)(config.parentRevision
+                ? `Parent revision: ${config.parentRevision} (from ${config.parentRevisionSource}).`
+                : "Parent revision: none (the recorded revision is not checked out, or is a root commit).");
             if (!args.includes("--image")) {
                 args.push("--image", "forallsecure/debian-buster:latest");
             }
@@ -189,6 +195,9 @@ function run() {
             args.push("--merge-base-branch-name", config.mergeBaseBranchName);
             args.push("--branch-name", config.branchName);
             args.push("--revision", config.revision);
+            if (config.parentRevision) {
+                args.push("--parent-revision", config.parentRevision);
+            }
             const argsString = args.join(" ");
             // Generate arguments for wait command
             // sarif, junit, coverage
@@ -362,7 +371,7 @@ exports.mayhemProjectSlug = mayhemProjectSlug;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolveRevision = exports.checkedOutRevision = void 0;
+exports.resolveParentRevision = exports.firstParent = exports.resolveRevision = exports.checkedOutRevision = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 /**
  * The commit the workspace actually has checked out. Never throws: when `cwd`
@@ -425,6 +434,50 @@ function resolveRevision(explicit, pullRequestHeadSha, checkedOut, envSha) {
     return { revision: "unknown", source: "unknown" };
 }
 exports.resolveRevision = resolveRevision;
+/**
+ * The first parent of `revision`, read from the commit object itself. Works in
+ * a depth-1 checkout (actions/checkout's default), where `git rev-parse
+ * <revision>^` fails: the parent object was not fetched, but the commit still
+ * names it. Never throws.
+ * @param cwd the directory to ask git about, normally the package path.
+ * @param revision the commit whose parent to read.
+ * @return the commit id of the first parent, or undefined for a root commit,
+ *   a commit that is not present locally, or no git.
+ */
+function firstParent(cwd, revision) {
+    try {
+        const out = (0, child_process_1.execFileSync)("git", ["cat-file", "commit", revision], {
+            cwd,
+            stdio: ["ignore", "pipe", "pipe"],
+        }).toString();
+        // The headers end at the first blank line; a "parent ..." line in the
+        // commit message must not match.
+        const headers = out.split("\n\n", 1)[0];
+        const m = /^parent ([0-9a-f]{40,64})$/m.exec(headers);
+        return m ? m[1] : undefined;
+    }
+    catch (_a) {
+        return undefined;
+    }
+}
+exports.firstParent = firstParent;
+/**
+ * Which parent commit to record on the Mayhem run: an explicit
+ * `parent-revision` input, else the first parent of the recorded revision.
+ * @param explicit the `parent-revision` input, possibly empty.
+ * @param fromCommit what `firstParent` found for the recorded revision.
+ * @return the parent to pass to the CLI ("" for none) and where it came from.
+ */
+function resolveParentRevision(explicit, fromCommit) {
+    if (explicit) {
+        return { parentRevision: explicit, source: "parent-revision input" };
+    }
+    if (fromCommit) {
+        return { parentRevision: fromCommit, source: "commit object" };
+    }
+    return { parentRevision: "", source: "none" };
+}
+exports.resolveParentRevision = resolveParentRevision;
 
 
 /***/ }),
