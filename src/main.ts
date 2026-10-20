@@ -15,10 +15,12 @@ import {
   ParentRevisionSource,
   resolveParentRevision,
   resolveBuildId,
+  resolveMergeBaseBranch,
   resolveRevision,
   RevisionSource,
   upstreamMergeBase,
 } from "./revision";
+import { GitHubEvent } from "./github";
 import { mayhemProjectSlug } from "./project";
 
 const mayhemUrl: string =
@@ -95,7 +97,7 @@ function getConfig(): Config {
 
   const ghRepo = `${process.env["GITHUB_SERVER_URL"]}:443/${repo}/`;
   const eventPath = process.env["GITHUB_EVENT_PATH"] || "event.json";
-  const event = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
+  const event: GitHubEvent = JSON.parse(readFileSync(eventPath, "utf-8")) || {};
   const eventPullRequest = event.pull_request;
 
   // Optional typed run duration (in seconds). When set it must be a positive
@@ -159,7 +161,7 @@ function getConfig(): Config {
     revisionSource,
     parentRevision,
     parentRevisionSource,
-    mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
+    mergeBaseBranchName: resolveMergeBaseBranch(event),
   };
 }
 

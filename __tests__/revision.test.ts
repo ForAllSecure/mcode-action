@@ -6,6 +6,7 @@ import {
   checkedOutRevision,
   firstParent,
   resolveBuildId,
+  resolveMergeBaseBranch,
   resolveParentRevision,
   resolveRevision,
   upstreamMergeBase,
@@ -241,5 +242,27 @@ describe("resolveBuildId", () => {
       buildId: "",
       source: "none",
     });
+  });
+});
+
+describe("resolveMergeBaseBranch", () => {
+  test("a pull request's base branch", () => {
+    const pr = { head: { ref: "topic", sha: SHA_A }, base: { ref: "dev" } };
+    expect(
+      resolveMergeBaseBranch({
+        pull_request: pr,
+        repository: { default_branch: "trunk" },
+      }),
+    ).toEqual("dev");
+  });
+
+  test("the repository's default branch outside a pull request", () => {
+    expect(
+      resolveMergeBaseBranch({ repository: { default_branch: "trunk" } }),
+    ).toEqual("trunk");
+  });
+
+  test("main when the payload names no repository", () => {
+    expect(resolveMergeBaseBranch({})).toEqual("main");
   });
 });
