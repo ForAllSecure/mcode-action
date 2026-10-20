@@ -11,8 +11,13 @@ Releases use annotated (ideally GPG-signed) git tags following semver:
 
 ## Steps
 
-1. Merge a PR bumping `version` in `package.json` to the new release version.
-2. On the merge commit, tag and push the release:
+1. Directly on `main` (no separate branch or PR), commit the bump of `version`
+   in `package.json` to the new release version and push it:
+   ```bash
+   git commit -am "Prepare v1.0.12 release" -m "* Bump package.json version to 1.0.12"
+   git push origin main
+   ```
+2. On that commit, tag and push the release:
    ```bash
    git tag -a v1.0.12 -m "Release v1.0.12" -s
    git push origin v1.0.12
