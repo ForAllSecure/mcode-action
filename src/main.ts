@@ -6,13 +6,18 @@ import {
   warning,
 } from "@actions/core";
 import { exec } from "@actions/exec";
-import { context as githubContext } from "@actions/github";
+import { context as githubContext, getOctokit } from "@actions/github";
 import { downloadTool } from "@actions/tool-cache";
 import { readFileSync, chmodSync } from "fs";
 import {
   checkedOutRevision,
+  firstParent,
+  ParentRevisionSource,
+  resolveParentRevision,
+  resolveBuildId,
   resolveRevision,
   RevisionSource,
+  upstreamMergeBase,
 } from "./revision";
 import { mayhemProjectSlug } from "./project";
 
@@ -48,6 +53,8 @@ type Config = {
   branchName: string;
   revision: string;
   revisionSource: RevisionSource;
+  parentRevision: string;
+  parentRevisionSource: ParentRevisionSource;
   mergeBaseBranchName: string;
 };
 
@@ -116,6 +123,11 @@ function getConfig(): Config {
         `it via the 'revision' input.`,
     );
   }
+  const { parentRevision, source: parentRevisionSource } =
+    resolveParentRevision(
+      getInput("parent-revision"),
+      firstParent(packagePath, revision),
+    );
 
   const requestedProject = getInput("project") || repo;
   const project = mayhemProjectSlug(requestedProject);
@@ -145,6 +157,8 @@ function getConfig(): Config {
       : resolveBranchName(process.env["GITHUB_REF_NAME"]),
     revision,
     revisionSource,
+    parentRevision,
+    parentRevisionSource,
     mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
   };
 }
@@ -221,6 +235,11 @@ async function run(): Promise<void> {
       info("Duration: 60s (default).");
     }
     info(`Revision: ${config.revision} (from ${config.revisionSource}).`);
+    info(
+      config.parentRevision
+        ? `Parent revision: ${config.parentRevision} (from ${config.parentRevisionSource}).`
+        : "Parent revision: none (the recorded revision is not checked out, or is a root commit).",
+    );
     if (!args.includes("--image")) {
       args.push("--image", "forallsecure/debian-buster:latest");
     }
@@ -229,6 +248,37 @@ async function run(): Promise<void> {
     args.push("--merge-base-branch-name", config.mergeBaseBranchName);
     args.push("--branch-name", config.branchName);
     args.push("--revision", config.revision);
+    if (config.parentRevision) {
+      args.push("--parent-revision", config.parentRevision);
+    }
+    if (!args.includes("--build-id") && !args.includes("-b")) {
+      const explicitBuildId = getInput("build-id");
+      const mergeBase = explicitBuildId
+        ? {}
+        : await upstreamMergeBase(
+            getOctokit(config.githubToken),
+            config.repo,
+            config.revision,
+          );
+      if (mergeBase.error) {
+        warning(
+          `Could not find the upstream commit of ${config.revision} ` +
+            `(${mergeBase.error}); not passing --build-id.`,
+        );
+      }
+      const { buildId, source: buildIdSource } = resolveBuildId(
+        explicitBuildId,
+        mergeBase.sha,
+      );
+      info(
+        buildId
+          ? `Build id: ${buildId} (from ${buildIdSource}).`
+          : "Build id: none (the repository is not a fork).",
+      );
+      if (buildId) {
+        args.push("--build-id", buildId);
+      }
+    }
 
     const argsString = args.join(" ");
 

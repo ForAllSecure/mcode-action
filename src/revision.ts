@@ -76,3 +76,135 @@ export function resolveRevision(
   }
   return { revision: "unknown", source: "unknown" };
 }
+
+/** Where the parent commit recorded on a Mayhem run came from, for the action log. */
+export type ParentRevisionSource =
+  | "parent-revision input"
+  | "commit object"
+  | "none";
+
+/**
+ * The first parent of `revision`, read from the commit object itself. Works in
+ * a depth-1 checkout (actions/checkout's default), where `git rev-parse
+ * <revision>^` fails: the parent object was not fetched, but the commit still
+ * names it. Never throws.
+ * @param cwd the directory to ask git about, normally the package path.
+ * @param revision the commit whose parent to read.
+ * @return the commit id of the first parent, or undefined for a root commit,
+ *   a commit that is not present locally, or no git.
+ */
+export function firstParent(cwd: string, revision: string): string | undefined {
+  try {
+    const out = execFileSync("git", ["cat-file", "commit", revision], {
+      cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+    }).toString();
+    // The headers end at the first blank line; a "parent ..." line in the
+    // commit message must not match.
+    const headers = out.split("\n\n", 1)[0];
+    const m = /^parent ([0-9a-f]{40,64})$/m.exec(headers);
+    return m ? m[1] : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Which parent commit to record on the Mayhem run: an explicit
+ * `parent-revision` input, else the first parent of the recorded revision.
+ * @param explicit the `parent-revision` input, possibly empty.
+ * @param fromCommit what `firstParent` found for the recorded revision.
+ * @return the parent to pass to the CLI ("" for none) and where it came from.
+ */
+export function resolveParentRevision(
+  explicit: string | undefined,
+  fromCommit: string | undefined,
+): { parentRevision: string; source: ParentRevisionSource } {
+  if (explicit) {
+    return { parentRevision: explicit, source: "parent-revision input" };
+  }
+  if (fromCommit) {
+    return { parentRevision: fromCommit, source: "commit object" };
+  }
+  return { parentRevision: "", source: "none" };
+}
+
+/** Where the build id recorded on a Mayhem run came from, for the action log. */
+export type BuildIdSource = "build-id input" | "upstream merge base" | "none";
+
+/** The subset of an Octokit client that `upstreamMergeBase` uses. */
+type GitHubApi = {
+  request: (
+    route: string,
+    params: Record<string, string>,
+  ) => Promise<{ data: unknown }>;
+};
+
+/**
+ * The newest commit that `revision` shares with the upstream repository this
+ * repository was forked from: the merge base with the upstream's default
+ * branch, asked of the GitHub compare API so no upstream history needs to be
+ * fetched. Never throws.
+ * @param api an authenticated GitHub client.
+ * @param repo this repository as "owner/name".
+ * @param revision the commit recorded on the run.
+ * @return `{sha}` with the merge base, `{}` when the repository is not a fork,
+ *   or `{error}` when GitHub could not answer.
+ */
+export async function upstreamMergeBase(
+  api: GitHubApi,
+  repo: string,
+  revision: string,
+): Promise<{ sha?: string; error?: string }> {
+  const [owner, name] = repo.split("/");
+  try {
+    const { data } = await api.request("GET /repos/{owner}/{repo}", {
+      owner,
+      repo: name,
+    });
+    const parent = (
+      data as {
+        parent?: { full_name: string; default_branch: string };
+      }
+    ).parent;
+    if (!parent) {
+      return {};
+    }
+    const [parentOwner, parentName] = parent.full_name.split("/");
+    const { data: compare } = await api.request(
+      "GET /repos/{owner}/{repo}/compare/{basehead}",
+      {
+        owner,
+        repo: name,
+        basehead: `${parentOwner}:${parentName}:${parent.default_branch}...${revision}`,
+      },
+    );
+    const sha = (compare as { merge_base_commit?: { sha?: string } })
+      .merge_base_commit?.sha;
+    return sha
+      ? { sha }
+      : { error: `no merge base between ${revision} and ${parent.full_name}` };
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Which build id to record on the Mayhem run: an explicit `build-id` input,
+ * else the upstream merge base of the recorded revision.
+ * @param explicit the `build-id` input, possibly empty.
+ * @param mergeBase what `upstreamMergeBase` found.
+ * @return the build id to pass to the CLI ("" for none) and where it came from.
+ */
+export function resolveBuildId(
+  explicit: string | undefined,
+  mergeBase: string | undefined,
+): { buildId: string; source: BuildIdSource } {
+  if (explicit) {
+    return { buildId: explicit, source: "build-id input" };
+  }
+  if (mergeBase) {
+    return { buildId: mergeBase, source: "upstream merge base" };
+  }
+  return { buildId: "", source: "none" };
+}
