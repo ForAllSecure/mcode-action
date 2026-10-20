@@ -1,4 +1,5 @@
 import { execFileSync } from "child_process";
+import { GitHubEvent } from "./github";
 
 /** Where the revision recorded on a Mayhem run came from, for the action log. */
 export type RevisionSource =
@@ -207,4 +208,15 @@ export function resolveBuildId(
     return { buildId: mergeBase, source: "upstream merge base" };
   }
   return { buildId: "", source: "none" };
+}
+
+/**
+ * The branch a run is compared against: a pull request's base, else the
+ * repository's default branch (in every event payload that names the
+ * repository), else "main".
+ */
+export function resolveMergeBaseBranch(event: GitHubEvent): string {
+  return (
+    event.pull_request?.base.ref || event.repository?.default_branch || "main"
+  );
 }

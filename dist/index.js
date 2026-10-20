@@ -113,7 +113,7 @@ function getConfig() {
         revisionSource,
         parentRevision,
         parentRevisionSource,
-        mergeBaseBranchName: eventPullRequest ? eventPullRequest.base.ref : "main",
+        mergeBaseBranchName: (0, revision_1.resolveMergeBaseBranch)(event),
     };
 }
 /**
@@ -397,7 +397,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.resolveBuildId = exports.upstreamMergeBase = exports.resolveParentRevision = exports.firstParent = exports.resolveRevision = exports.checkedOutRevision = void 0;
+exports.resolveMergeBaseBranch = exports.resolveBuildId = exports.upstreamMergeBase = exports.resolveParentRevision = exports.firstParent = exports.resolveRevision = exports.checkedOutRevision = void 0;
 const child_process_1 = __nccwpck_require__(2081);
 /**
  * The commit the workspace actually has checked out. Never throws: when `cwd`
@@ -563,6 +563,16 @@ function resolveBuildId(explicit, mergeBase) {
     return { buildId: "", source: "none" };
 }
 exports.resolveBuildId = resolveBuildId;
+/**
+ * The branch a run is compared against: a pull request's base, else the
+ * repository's default branch (in every event payload that names the
+ * repository), else "main".
+ */
+function resolveMergeBaseBranch(event) {
+    var _a, _b;
+    return (((_a = event.pull_request) === null || _a === void 0 ? void 0 : _a.base.ref) || ((_b = event.repository) === null || _b === void 0 ? void 0 : _b.default_branch) || "main");
+}
+exports.resolveMergeBaseBranch = resolveMergeBaseBranch;
 
 
 /***/ }),
